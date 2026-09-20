@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Icon / Pin w/ background">
+<circle id="background" cx="16" cy="16" r="16" fill="#F3F3F2"/>
+<g id="Icon / Pin">
+<path id="Vector" d="M22.3998 14.4C22.3998 19.2 15.9998 24 15.9998 24C15.9998 24 9.59983 19.2 9.59983 14.4C9.59983 12.7026 10.2741 11.0747 11.4743 9.87452C12.6746 8.67428 14.3024 8 15.9998 8C17.6972 8 19.3251 8.67428 20.5253 9.87452C21.7255 11.0747 22.3998 12.7026 22.3998 14.4Z" stroke="#E52169" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M15.9998 16.8C17.3253 16.8 18.3998 15.7255 18.3998 14.4C18.3998 13.0745 17.3253 12 15.9998 12C14.6743 12 13.5998 13.0745 13.5998 14.4C13.5998 15.7255 14.6743 16.8 15.9998 16.8Z" stroke="#E52169" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+</svg>

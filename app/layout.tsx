@@ -1,17 +1,25 @@
 import type { Metadata } from "next";
-
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-
+import { Inter } from "next/font/google";
 import "./globals.css";
 
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://hibgroup.co.nz"),
-  title: { default: "Hibiscus Group | Local Services Delivered 2 U", template: "%s | Hibiscus Group" },
-  description: "Skip bins, bulk water delivery, water blasting, arborist services, and digger and truck hire across North Auckland.",
-  openGraph: { title: "Hibiscus Group", description: "Practical local services, delivered straight to you.", images: [{ url: "/images/hero.png", width: 1914, height: 822 }], locale: "en_NZ", type: "website" },
+  title: "Hibiscus Group | Local Services Delivered 2 U",
+  description: "Mini skips, bulk water delivery, water blasting, arborist services and digger and truck hire across North Auckland.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
-  return <html lang="en-NZ"><body><Header /><main>{children}</main><Footer /></body></html>;
+  return (
+    <html
+      lang="en"
+      className={inter.variable}
+      data-scroll-behavior="smooth"
+    >
+      <body>{children}</body>
+    </html>
+  );
 }

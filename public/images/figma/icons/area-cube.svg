@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Icon / Cube w/ background">
+<circle id="background" cx="15" cy="15" r="15" fill="#E52169"/>
+<g id="Icon / Cube">
+<path id="Vector" d="M21.8332 11.9707C21.8329 11.7044 21.7626 11.4429 21.6293 11.2123C21.4961 10.9818 21.3045 10.7903 21.0739 10.6572L15.7591 7.62013C15.5283 7.48685 15.2664 7.41669 14.9998 7.41669C14.7333 7.41669 14.4714 7.48685 14.2406 7.62013L8.92576 10.6572C8.69515 10.7903 8.5036 10.9818 8.37034 11.2123C8.23707 11.4429 8.16678 11.7044 8.1665 11.9707V18.0448C8.16678 18.3111 8.23707 18.5726 8.37034 18.8031C8.5036 19.0337 8.69515 19.2251 8.92576 19.3583L14.2406 22.3953C14.4714 22.5286 14.7333 22.5988 14.9998 22.5988C15.2664 22.5988 15.5283 22.5286 15.7591 22.3953L21.0739 19.3583C21.3045 19.2251 21.4961 19.0337 21.6293 18.8031C21.7626 18.5726 21.8329 18.3111 21.8332 18.0448V11.9707Z" stroke="white" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M8.39437 11.2113L14.9999 15.0076L21.6055 11.2113" stroke="white" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_3" d="M15 22.6002V15.0076" stroke="white" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+</svg>

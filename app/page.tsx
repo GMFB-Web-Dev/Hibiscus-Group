@@ -1,150 +1,67 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BadgeDollarSign } from "lucide-react";
+import { AreasSection, ArrowIcon, BoxIcon, Hero, SectionHeading, SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { TestimonialsCarousel } from "@/components/testimonials-carousel";
+import { serviceList } from "@/lib/site-data";
 
-import { ServiceCard } from "@/components/service-card";
-import { Testimonials } from "@/components/testimonials";
-import { serviceAreas, services } from "@/lib/services";
-
-const trustItems = [
-  { image: "/images/trust-family.png", label: "Locally family-owned and operated" },
-  { image: "/images/trust-location.png", label: "North Auckland" },
-  { image: "/images/trust-experience.png", label: "20+ years’ industry experience" },
-] as const;
-
-const cardActions = ["Book a skip", "Book water", "Request a wash", "Get arb help", "Book dig & tip"];
-
-const values = [
-  { title: "Going the extra mile", copy: "We put in the extra effort to make sure customers are properly looked after and the job is done right." },
-  { title: "Local family service", copy: "As a local, family-operated business, we offer personal service, clear communication and genuine care." },
-  { title: "Attention to detail", copy: "We do not believe in “near enough is good enough”. Every job should be completed to a high standard." },
-  { title: "Reliable after-sales service", copy: "If something is not right, we want customers to let us know so we can help fix it properly." },
-] as const;
-
-const steps = [
-  { image: "/images/process-select-figma.png", title: "Choose your service" },
-  { image: "/images/process-book-figma.png", title: "Select size, quantity or area" },
-  { image: "/images/process-deliver-figma.png", title: "Pay online or book a service" },
-] as const;
+const cardImages = ["/images/figma/home-8.png", "/images/figma/services-7.png", "/images/figma/services-9.png", "/images/figma/home-7.png", "/images/figma/home-10.png"];
+const cardAccents = ["#e52169", "#3989d3", "#f36f07", "#2d8a32", "#f8c919"];
+const cardCopy = [
+  "Mini skip bins for tight access, clean-ups, waste removal and more.",
+  "Water delivery for tanks, rural properties and household supply.",
+  "Exterior washing for homes, buildings, driveways and property maintenance.",
+  "Tree and arb services for properties needing practical outdoor support.",
+  "Digging, tipping and clean-up support for jobs that need a reliable local team.",
+];
 
 export default function Home() {
-  return (
-    <>
-      <section className="home-hero">
-        <Image src="/images/hero.png" alt="Hibiscus Group trucks and colourful mini skip bins" fill priority sizes="100vw" />
-        <div className="home-hero__overlay" />
-        <div className="home-shell home-hero__content">
-          <h1>Local services, delivered 2 U.</h1>
-          <p>Hibiscus Group brings practical property, maintenance, and delivery services straight 2 U. From mini skip bins and water supply to washing, arb work, and dig-and-tip services, we make it easier to get the job sorted without running around.</p>
-          <div className="home-actions">
-            <Link className="home-button home-button--pink" href="/book">Book a service <ArrowRight /></Link>
-            <Link className="home-button home-button--outline" href="#services">Our services <ArrowRight /></Link>
-          </div>
-        </div>
-        <div className="home-trust">
-          <div className="home-shell home-trust__inner">
-            {trustItems.map((item) => (
-              <div className="home-trust__item" key={item.label}>
-                <Image src={item.image} alt="" width={50} height={50} />
-                <span>{item.label}</span>
-              </div>
-            ))}
-            <div className="home-trust__item">
-              <BadgeDollarSign aria-hidden="true" />
-              <span>Fixed-price options for skips &amp; water</span>
-            </div>
-          </div>
+  return <>
+    <SiteHeader />
+    <main>
+      <Hero large image="/images/figma/home-6.png" title="LOCAL SERVICES, DELIVERED 2 U." copy="Hibiscus Group brings practical property, maintenance, and delivery services straight 2 U. From mini skip bins and water supply to washing, arb work, and dig-and-tip services, we make it easier to get the job sorted without running around." />
+      <section className="trust-strip">
+        <div><Image src="/images/figma/icons/trust-family.png" alt="" width={56} height={60} aria-hidden /><strong>LOCALLY FAMILY-<br />OWNED AND OPERATED</strong></div>
+        <div><Image src="/images/figma/icons/trust-location.png" alt="" width={54} height={58} aria-hidden /><strong>North Auckland</strong></div>
+        <div><Image src="/images/figma/icons/trust-experience.png" alt="" width={57} height={59} aria-hidden /><strong>20+ YEARS&apos;<br />INDUSTRY EXPERIENCE</strong></div>
+        <div><Image src="/images/figma/icons/trust-price.png" alt="" width={50} height={53} aria-hidden /><strong>FIXED-PRICE OPTIONS<br />FOR SKIPS & WATER</strong></div>
+      </section>
+      <section className="home-services">
+        <SectionHeading eyebrow="OUR SERVICES" centered>WHAT DO YOU NEED SORTED?</SectionHeading>
+        <p className="section-intro">Choose the service you need and we&apos;ll get you to the right place quickly.</p>
+        <div className="service-card-grid">
+          {serviceList.map((service, index) => <article className="service-card" key={service.slug} style={{ "--accent": cardAccents[index] } as React.CSSProperties}>
+            <div className="service-card-image"><Image src={cardImages[index]} alt="" fill sizes="(max-width: 640px) 90vw, 20vw" /></div>
+            <h3>{service.shortName}</h3><p>{cardCopy[index]}</p>
+            <Link href={`/services/${service.slug}`}>{service.fixedPrice ? service.slug === "h2o-2-u" ? "ORDER WATER" : "BOOK A SKIP" : service.slug === "arb-2-u" ? "GET ARB HELP" : service.slug === "dig-tip-2-u" ? "BOOK DIG OR TIP" : "REQUEST A WASH"}<ArrowIcon /></Link>
+          </article>)}
         </div>
       </section>
-
-      <section className="home-services" id="services">
-        <div className="home-shell">
-          <div className="home-heading home-heading--center">
-            <p className="home-eyebrow">Our services</p>
-            <h2>What do you need sorted?</h2>
-            <span className="home-rule" />
-            <p>Choose the service you need and we’ll guide you through the right next step.</p>
-          </div>
-          <div className="home-service-grid">
-            {services.map((service, index) => <ServiceCard key={service.slug} service={service} ctaLabel={cardActions[index]} home />)}
-          </div>
+      <section className="how-section">
+        <div className="how-heading">
+          <SectionHeading eyebrow="HOW IT WORKS" centered>PICK IT, PAY ONLINE OR REQUEST A QUOTE</SectionHeading>
+          <p>Skips 2 U and H2O 2 U have fixed pricing and can be ordered online. ARB 2 U, WASH 2 U and DIG & TIP 2 U are quoted based on your job. Choose your service and we&apos;ll guide you through the right next step.</p>
+        </div>
+        <Link className="button button-pink" href="/services">CHECK FIXED PRICE SERVICES <ArrowIcon /></Link>
+        <div className="steps">
+          <article className="process-step">
+            <div className="process-step-image"><Image src="/images/process/step-1.png" alt="" width={1312} height={570} /></div>
+            <strong>CHOOSE YOUR SERVICE</strong>
+          </article>
+          <article className="process-step">
+            <div className="process-step-image"><Image src="/images/process/step-2.png" alt="" width={1312} height={570} /></div>
+            <strong>SELECT SIZE, QUANTITY OR AREA</strong>
+          </article>
+          <article className="process-step">
+            <div className="process-step-image"><Image src="/images/process/step-3.png" alt="" width={1312} height={570} /></div>
+            <strong>PAY ONLINE OR BOOK A SERVICE</strong>
+          </article>
         </div>
       </section>
-
-      <section className="home-process">
-        <div className="home-shell">
-          <div className="home-heading home-heading--center">
-            <p className="home-eyebrow">How it works</p>
-            <h2>Pick it, pay online or request a quote</h2>
-            <span className="home-rule" />
-            <p>Skips 2 U and H2O 2 U have fixed pricing and can be ordered online. ARB 2 U, WASH 2 U and DIG &amp; TIP 2 U are quoted based on your job. Choose your service and we’ll guide you through the right next step.</p>
-          </div>
-          <Link className="home-button home-button--pink home-process__button" href="/book">Check fixed price services <ArrowRight /></Link>
-          <div className="home-process__grid">
-            {steps.map((step, index) => (
-              <article key={step.title}>
-                <div className={`home-process__image home-process__image--${index + 1}`}><Image src={step.image} alt="" fill sizes="416px" /></div>
-                <h3>{step.title}</h3>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="home-about">
-        <div className="home-shell home-about__grid">
-          <div className="home-about__copy">
-            <p className="home-eyebrow">About us</p>
-            <h2>A local family-operated team that goes the extra mile</h2>
-            <span className="home-rule" />
-            <p>Hibiscus Group is a local, family-operated business helping customers across the North Shore, Rodney, Dairy Flat and the Hibiscus Coast with practical services delivered directly to them.</p>
-            <p>Founded by Scotty, the business brings together over 20 years of hands-on industry experience across water delivery, skip bins, arborist works and machinery services. Hibiscus Group is built on practical, reliable service, clear communication and doing the job properly.</p>
-            <Link className="home-button home-button--pink" href="/about">About us <ArrowRight /></Link>
-          </div>
-          <div className="home-about__image"><Image src="/images/about-team.jpg" alt="The local Hibiscus Group team" fill sizes="616px" /></div>
-        </div>
-      </section>
-
-      <section className="home-values">
-        <div className="home-shell home-values__grid">
-          <div className="home-values__heading">
-            <p className="home-eyebrow">Our values</p>
-            <h2>Why locals choose Hibiscus Group</h2>
-            <span className="home-rule" />
-          </div>
-          <div className="home-values__items">
-            {values.map(({ title, copy }) => (
-              <article key={title}>
-                <Image className="home-values__icon" src="/images/value-cube.svg" alt="" width={48} height={48} />
-                <div><h3>{title}</h3><p>{copy}</p></div>
-              </article>
-            ))}
-            <Link className="home-button home-button--pink" href="/contact">Contact us <Image src="/images/value-arrow.svg" alt="" width={22} height={22} /></Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="home-testimonials">
-        <div className="home-shell">
-          <div className="home-heading home-heading--center">
-            <p className="home-eyebrow">Testimonials</p>
-            <h2>Trusted by local customers</h2>
-            <span className="home-rule" />
-          </div>
-          <Testimonials />
-        </div>
-      </section>
-
-      <section className="home-areas">
-        <div className="home-shell home-areas__grid">
-          <div className="home-area-list">{serviceAreas.map((area) => <span key={area}><Image src="/images/value-cube.svg" alt="" width={30} height={30} />{area}</span>)}</div>
-          <div className="home-areas__copy">
-            <h2>Servicing North Shore and Rodney</h2>
-            <span className="home-rule" />
-            <p>Based in Dairy Flat, we service a wide area across Rodney, Hibiscus Coast, North Shore and nearby locations.</p>
-          </div>
-        </div>
-      </section>
-    </>
-  );
+      <section className="split-section home-about"><div className="split-copy"><SectionHeading eyebrow="ABOUT US">A LOCAL FAMILY-OPERATED TEAM THAT GOES THE EXTRA MILE</SectionHeading><p>Hibiscus Group is a local, family-operated business helping customers across the North Shore, Rodney, Dairy Flat and the Hibiscus Coast with practical property services delivered directly to them.</p><p>Founded by Scotty, the business brings together over 20 years of hands-on industry experience across water delivery, skip bins, water blasting, arborist services and digger/truck hire.</p><Link className="button button-pink" href="/about">ABOUT US <ArrowIcon /></Link></div><div className="split-image"><Image src="/images/figma/about-2.jpg" alt="Hibiscus Group team" fill sizes="(max-width: 800px) 100vw, 50vw" /></div></section>
+      <section className="values-section"><SectionHeading eyebrow="OUR VALUES">WHY LOCALS CHOOSE HIBISCUS GROUP</SectionHeading><div className="values-grid">{[['GOING THE EXTRA MILE','We put in the extra effort to make sure customers are properly looked after and the job is done right.'],['LOCAL FAMILY SERVICE','As a local, family-operated business, we offer personal service, clear communication and genuine care.'],['ATTENTION TO DETAIL','We do not believe in “near enough is good enough”. Every job should be completed to a high standard.'],['RELIABLE AFTER-SALES SERVICE','If something is not right, we want customers to let us know so we can help fix it properly.']].map(([title,copy]) => <article key={title}><span aria-hidden><BoxIcon /></span><h3>{title}</h3><p>{copy}</p></article>)}<Link className="button button-pink" href="/contact">CONTACT US <ArrowIcon /></Link></div></section>
+      <TestimonialsCarousel />
+      <AreasSection title="SERVICING NORTH SHORE AND RODNEY" />
+    </main>
+    <SiteFooter />
+  </>;
 }

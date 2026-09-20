@@ -1,46 +1,34 @@
-import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { AreasSection, ArrowIcon, Hero, SectionHeading, SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { serviceList } from "@/lib/site-data";
 
-import { AreasBand } from "@/components/areas-band";
-import { PageBanner } from "@/components/page-banner";
-import { getService } from "@/lib/services";
+const servicesCopy = {
+  "skip-2-u": "SKIP 2 U offers mini skip bins designed for smaller jobs, tight access areas and practical waste removal. With 2m³, 3m³ and 4.5m³ skip options, customers can choose the size they need, pay upfront online, and have the bin delivered straight to their property.",
+  "h2o-2-u": "H2O 2 U provides water delivery for local homes, properties and sites, with flexible delivery options based on quantity and location. Customers can choose the amount of water they need, confirm their area, pay online, and have it delivered directly to them.",
+  "wash-2-u": "WASH 2 U helps keep properties clean, tidy and well maintained with experienced water blasting services. Backed by years of hands-on experience, the team focuses on doing the job properly, paying attention to the details and making sure the final result meets a high standard.",
+  "arb-2-u": "ARB 2 U provides arborist services for customers who need help managing trees and outdoor areas. Whether it is part of general property maintenance or a specific outdoor job, the team brings a practical, hands-on approach with a focus on reliable service and proper workmanship.",
+  "dig-tip-2-u": "DIG AND TIP 2 U supports customers who need dry digger and truck hire for practical property work, clean-ups and material movement. As this service depends on the job, customers can make an enquiry and the team will review what is needed before providing the right next step.",
+};
 
-export const metadata: Metadata = { title: "Services", description: "Explore Hibiscus Group's five practical local service lines." };
-
-const serviceOrder = ["h2o-2-u", "arb-2-u", "skip-2-u", "dig-tip-2-u", "wash-2-u"] as const;
-const serviceImages = {
-  "h2o-2-u": "/images/services-h2o.jpg",
-  "arb-2-u": "/images/services-arb.jpg",
-  "skip-2-u": "/images/services-skip.jpg",
-  "dig-tip-2-u": "/images/services-dig.jpg",
-  "wash-2-u": "/images/services-wash.jpg",
-} as const;
+const listImages = ["/images/figma/services-1.png", "/images/figma/services-7.png", "/images/figma/services-9.png", "/images/figma/services-2.png", "/images/figma/services-6.png"];
 
 export default function ServicesPage() {
-  return (
-    <>
-      <PageBanner eyebrow="Our services" title="What do you need sorted?" copy="From skip bins and water delivery to washing, arborist work and digger hire, choose the practical local service you need and we’ll guide you through the right next step." action={{ href: "/book", label: "Book a service" }} />
-      <div className="figma-service-showcase">
-        {serviceOrder.map((slug, index) => {
-          const service = getService(slug)!;
-          const imageLeft = index > 1;
-          return (
-            <section className={`figma-service-row${imageLeft ? " figma-service-row--image-left" : ""}${slug === "skip-2-u" ? " figma-service-row--tall" : ""}`} style={{ "--accent": service.color, "--soft": service.colorSoft } as React.CSSProperties} key={slug}>
-              <div className="figma-service-row__copy">
-                <p className="figma-kicker">{service.eyebrow}</p>
-                <h2>{service.name}</h2>
-                <span className="figma-rule" />
-                <p>{service.summary}</p>
-                <Link className="figma-button" href={`/services/${service.slug}`}>Learn more <ArrowRight /></Link>
-              </div>
-              <div className="figma-service-row__image"><Image src={serviceImages[slug]} alt={`${service.name} service`} fill sizes="(max-width: 850px) 100vw, 50vw" /></div>
-            </section>
-          );
-        })}
+  return <>
+    <SiteHeader />
+    <main>
+      <Hero image="/images/figma/services-8.png" title="SERVICES DELIVERED 2 U" copy="From water delivery and mini skip bins to water blasting, arborist work, and digger/truck hire, Hibiscus Group makes it easier to organise the services you need through one local, family-operated team." primaryLabel="BOOK A SERVICE" primaryHref="/book" secondaryLabel="CONTACT US" secondaryHref="/contact" />
+      <div className="services-list">
+        {serviceList.map((service, index) => <section className={`service-row ${index % 2 ? "reverse" : ""}`} key={service.slug} style={{ "--accent": service.accent } as React.CSSProperties}>
+          <div className="service-row-image"><Image src={listImages[index]} alt="" fill sizes="(max-width: 800px) 100vw, 50vw" /></div>
+          <div className="service-row-copy">
+            <SectionHeading eyebrow={service.eyebrow}>{service.shortName}</SectionHeading>
+            <p>{servicesCopy[service.slug]}</p>
+            <a className="button button-accent" href={`/services/${service.slug}`}>LEARN MORE <ArrowIcon /></a>
+          </div>
+        </section>)}
       </div>
-      <AreasBand />
-    </>
-  );
+      <AreasSection title="SERVICING NORTH SHORE AND RODNEY" />
+    </main>
+    <SiteFooter />
+  </>;
 }
