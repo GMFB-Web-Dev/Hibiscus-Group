@@ -259,7 +259,7 @@ export function BookingForm({
       <h1>{service ? `BOOK YOUR ${service.shortName}` : "BOOK A SERVICE"}</h1>
       <span className="heading-line" />
       <p className="booking-subtitle">
-        {step === 1 ? (serviceSlug === "skip-2-u" ? "Choose Your Skip, Select Your Option, Enter Your Details And Pay Online." : serviceSlug === "h2o-2-u" ? "Choose Your Water Delivery, Select Your Load, Enter Your Details And Pay Online." : "Choose your service and enter your contact details.") : step === 2 ? (fixed ? "Enter the service address and choose a live Cal.com time." : "Enter your address, preferred date and job details.") : (fixed ? "Review everything before continuing to secure Stripe payment." : "Review your request before sending it to our team.")}
+        {step === 1 ? (serviceSlug === "skip-2-u" ? "Choose Your Skip, Select Your Option, Enter Your Details And Pay Online." : serviceSlug === "h2o-2-u" ? "Choose Your Water Delivery, Select Your Load, Enter Your Details And Pay Online." : "Choose your service and enter your contact details.") : step === 2 ? (fixed ? "Enter the service address and choose an available booking time." : "Enter your address, preferred date and job details.") : (fixed ? "Review everything before continuing to secure payment." : "Review your request before sending it to our team.")}
       </p>
 
       {step === 1 && <div className="booking-fields two-col booking-first-fields">
@@ -291,7 +291,7 @@ export function BookingForm({
         <label>Town / City *<input value={values.city} onChange={(e) => update("city", e.target.value)} /></label>
         <label>Post Code *<input value={values.postcode} onChange={(e) => update("postcode", e.target.value)} /></label>
         {fixed ? <div className="cal-slots">
-          <div className="cal-slots-heading"><strong>Available times</strong><span>Powered by Cal.com · {values.time_zone}</span></div>
+          <div className="cal-slots-heading"><strong>Available times</strong><span>{values.time_zone}</span></div>
           {slotsLoading && <p>Loading live availability…</p>}
           {!slotsLoading && !slots.length && <p>No times are available in the next 14 days. Please call 022 183 1176.</p>}
           {Object.entries(slotsByDay).map(([day, daySlots]) => <div className="slot-day" key={day}>
@@ -317,15 +317,14 @@ export function BookingForm({
         <div><span>Name</span><strong>{values.first_name} {values.last_name}</strong></div>
         <div><span>Contact</span><strong>{values.email}<br />{values.phone}</strong></div>
         <div><span>Address</span><strong>{values.street_address}{values.address_line_2 ? `, ${values.address_line_2}` : ""}<br />{values.city} {values.postcode}</strong></div>
-        <div><span>{fixed ? "Cal.com time" : "Preferred date"}</span><strong>{fixed && values.slot_start ? new Intl.DateTimeFormat("en-NZ", { timeZone: values.time_zone, dateStyle: "full", timeStyle: "short" }).format(new Date(values.slot_start)) : `${values.preferred_date} ${values.preferred_time}`}</strong></div>
-        {fixed && <p className="payment-note">Next, you’ll go to Stripe’s secure sandbox Checkout. Your Cal.com time and selected stock are held while payment is open; stock is deducted only after payment succeeds.</p>}
+        <div><span>{fixed ? "Selected booking time" : "Preferred date"}</span><strong>{fixed && values.slot_start ? new Intl.DateTimeFormat("en-NZ", { timeZone: values.time_zone, dateStyle: "full", timeStyle: "short" }).format(new Date(values.slot_start)) : `${values.preferred_date} ${values.preferred_time}`}</strong></div>
         <label className="checkbox booking-consent"><input checked={consent} onChange={(event) => setConsent(event.target.checked)} type="checkbox" />I agree to the terms and conditions</label>
       </div>}
 
       {error && <p className="form-message error">{error}</p>}
       <div className="booking-actions">
         {step > 1 && <button className="button button-outline-dark" type="button" onClick={() => setStep((current) => current - 1)}>BACK</button>}
-        {step < 3 ? <button className="button button-accent" type="button" disabled={!validStep()} onClick={() => setStep((current) => current + 1)}>NEXT <ArrowIcon /></button> : <button className="button button-accent" type="button" disabled={status === "submitting" || !validStep()} onClick={submit}>{status === "submitting" ? (fixed ? "OPENING STRIPE..." : "SENDING...") : (fixed ? "CONTINUE TO PAYMENT" : "CONFIRM REQUEST")} <ArrowIcon /></button>}
+        {step < 3 ? <button className="button button-accent" type="button" disabled={!validStep()} onClick={() => setStep((current) => current + 1)}>NEXT <ArrowIcon /></button> : <button className="button button-accent" type="button" disabled={status === "submitting" || !validStep()} onClick={submit}>{status === "submitting" ? (fixed ? "OPENING PAYMENT..." : "SENDING...") : (fixed ? "CONTINUE TO PAYMENT" : "CONFIRM REQUEST")} <ArrowIcon /></button>}
       </div>
     </section>
   );

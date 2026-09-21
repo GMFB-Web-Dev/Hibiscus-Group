@@ -35,7 +35,7 @@ export default async function BookingSuccessPage({
         <span className="heading-line" />
         <p className="booking-subtitle">
           {paid
-            ? `${customerName ? `Thanks ${customerName}. ` : ""}Your payment, Cal.com time, and stock allocation are confirmed. A booking email is on its way.`
+            ? `${customerName ? `Thanks ${customerName}. ` : ""}Your payment is complete and your booking time is confirmed. A confirmation email is on its way.`
             : "Your booking is not confirmed yet. If you completed payment, refresh this page in a moment or check your email."}
         </p>
         <Link className="button button-pink" href="/">BACK TO HOME <ArrowIcon /></Link>

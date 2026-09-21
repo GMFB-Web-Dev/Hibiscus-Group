@@ -262,7 +262,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .booking-review { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; border: 1px solid #d0d5dd; background: #d0d5dd; text-align: left; }
 .booking-review > div { min-height: 88px; padding: 16px; display: grid; background: #fff; }
 .booking-review span { color: #667085; font-size: 13px; }
-.payment-note { grid-column: 1 / -1; margin: 0; padding: 18px; background: #fff8da; }
 .booking-consent { grid-column: 1 / -1; padding: 18px; background: #fff; }
 .booking-result { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .booking-actions { margin-top: 48px; display: flex; justify-content: center; gap: 16px; }
@@ -345,6 +344,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .price-table { min-width: 760px; }
   .booking-shell h1 { font-size: 36px; }
   .booking-fields.two-col, .booking-fields .two-col, .booking-review { grid-template-columns: 1fr; }
-  .booking-fields .full, .payment-note { grid-column: auto; }
+  .booking-fields .full { grid-column: auto; }
   .cal-slots-heading { align-items: flex-start; flex-direction: column; gap: 4px; }
 }

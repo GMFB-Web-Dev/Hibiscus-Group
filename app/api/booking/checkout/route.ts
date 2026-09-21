@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Accept the terms and conditions to continue." }, { status: 400 });
     }
     if (!Number.isFinite(slotStart.getTime()) || !Number.isFinite(slotEnd.getTime()) || slotStart <= new Date() || slotEnd <= slotStart) {
-      return Response.json({ error: "Choose an available Cal.com time slot." }, { status: 400 });
+      return Response.json({ error: "Choose an available booking time." }, { status: 400 });
     }
 
     const availableSlots = await getAvailableCalSlots({
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     ));
 
     if (!selectedSlotIsAvailable) {
-      return Response.json({ error: "That time was just taken. Please choose another Cal.com slot." }, { status: 409 });
+      return Response.json({ error: "That time was just taken. Please choose another booking time." }, { status: 409 });
     }
 
     const supabase = createAdminSupabaseClient();
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
       p_reservation_id: reservationId,
       p_cal_booking_uid: calBookingUid,
     });
-    if (calAttachError || calAttached !== true) throw new Error("Unable to save Cal.com booking.");
+    if (calAttachError || calAttached !== true) throw new Error("Unable to save booking.");
 
     const origin = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
     const stripe = getStripeClient();
