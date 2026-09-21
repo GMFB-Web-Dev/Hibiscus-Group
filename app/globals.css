@@ -238,10 +238,28 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .booking-fields .full { grid-column: 1 / -1; }
 .booking-fields label { color: var(--ink); font-weight: 500; }
 .booking-fields textarea { min-height: 110px; resize: vertical; }
+.inventory-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.inventory-card { position: relative; display: grid; gap: 6px; min-height: 148px; padding: 20px; border: 2px solid #d0d5dd; border-radius: 10px; background: #fff; color: var(--ink); text-align: left; cursor: pointer; transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.inventory-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.inventory-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.inventory-card strong { padding-right: 92px; font-size: 18px; }
+.inventory-card small { color: #667085; font-size: 14px; }
+.inventory-card b { margin-top: auto; color: var(--accent); font-size: 18px; }
+.stock-badge { position: absolute; top: 16px; right: 16px; padding: 5px 8px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, #fff); color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .04em; }
+.stock-empty { grid-column: 1 / -1; padding: 24px; border: 1px dashed #98a2b3; border-radius: 8px; text-align: center; }
+.cal-slots { display: grid; gap: 18px; padding: 20px; border: 1px solid #d0d5dd; border-radius: 10px; background: #f8fafc; }
+.cal-slots-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.cal-slots-heading span { color: #667085; font-size: 12px; }
+.slot-day { display: grid; gap: 10px; }
+.slot-day > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.slot-day button { min-width: 92px; padding: 10px 14px; border: 1px solid #98a2b3; border-radius: 7px; background: #fff; color: var(--ink); font-weight: 700; cursor: pointer; }
+.slot-day button:hover, .slot-day button.selected { border-color: var(--accent); background: var(--accent); color: #fff; }
 .booking-review { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; border: 1px solid #d0d5dd; background: #d0d5dd; text-align: left; }
 .booking-review > div { min-height: 88px; padding: 16px; display: grid; background: #fff; }
 .booking-review span { color: #667085; font-size: 13px; }
 .payment-note { grid-column: 1 / -1; margin: 0; padding: 18px; background: #fff8da; }
+.booking-consent { grid-column: 1 / -1; padding: 18px; background: #fff; }
+.booking-result { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .booking-actions { margin-top: 48px; display: flex; justify-content: center; gap: 16px; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
@@ -321,6 +339,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .pricing-section { overflow-x: auto; }
   .price-table { min-width: 760px; }
   .booking-shell h1 { font-size: 36px; }
-  .booking-fields.two-col, .booking-fields .two-col, .booking-review { grid-template-columns: 1fr; }
+  .booking-fields.two-col, .booking-fields .two-col, .booking-review, .inventory-choice { grid-template-columns: 1fr; }
   .booking-fields .full, .payment-note { grid-column: auto; }
+  .cal-slots-heading { align-items: flex-start; flex-direction: column; gap: 4px; }
 }
