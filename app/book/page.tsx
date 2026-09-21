@@ -10,6 +10,6 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
   const valid = serviceList.some((item) => item.slug === service);
   const initialService = valid ? service as ServiceSlug : "general";
   const supabase = createPublicSupabaseClient();
-  const { data } = await supabase.rpc("get_available_inventory");
-  return <><SiteHeader /><main className="book-page"><BookingForm initialService={initialService} inventory={(data || []) as InventoryItem[]} checkoutCancelled={cancelled === "1"} /></main><SiteFooter /></>;
+  const { data, error } = await supabase.rpc("get_available_inventory");
+  return <><SiteHeader /><main className="book-page"><BookingForm initialService={initialService} inventory={(data || []) as InventoryItem[]} inventoryUnavailable={Boolean(error)} checkoutCancelled={cancelled === "1"} /></main><SiteFooter /></>;
 }

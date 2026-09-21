@@ -83,6 +83,23 @@ export type InventoryItem = {
   stock_quantity: number;
 };
 
+function inventoryType(item: InventoryItem) {
+  if (item.service_slug === "skip-2-u") {
+    return item.sku.startsWith("skip-hardfill-") ? "Hard fill" : "Rubbish";
+  }
+  if (item.service_slug === "h2o-2-u") {
+    return item.name.split(" to ")[1] || item.name;
+  }
+  return item.detail || item.name;
+}
+
+function inventorySize(item: InventoryItem) {
+  if (item.service_slug === "h2o-2-u") {
+    return item.name.split(" to ")[0];
+  }
+  return item.name;
+}
+
 type BookingValues = {
   first_name: string;
   last_name: string;
@@ -119,13 +136,16 @@ async function readJson(response: Response) {
 export function BookingForm({
   initialService,
   inventory,
+  inventoryUnavailable = false,
   checkoutCancelled = false,
 }: {
   initialService: ServiceSlug | "general";
   inventory: InventoryItem[];
+  inventoryUnavailable?: boolean;
   checkoutCancelled?: boolean;
 }) {
   const [serviceSlug, setServiceSlug] = useState<ServiceSlug | "general">(initialService);
+  const [selectedType, setSelectedType] = useState("");
   const [step, setStep] = useState(1);
   const [values, setValues] = useState(emptyValues);
   const [consent, setConsent] = useState(false);
@@ -137,6 +157,8 @@ export function BookingForm({
   const service = serviceSlug === "general" ? null : services[serviceSlug];
   const accent = service?.accent || "#e91e63";
   const items = inventory.filter((item) => item.service_slug === serviceSlug);
+  const types = [...new Set(items.map(inventoryType))];
+  const sizes = items.filter((item) => inventoryType(item) === selectedType);
   const selected = items.find((item) => item.sku === values.sku);
   const fixed = service?.fixedPrice ?? false;
 
@@ -181,7 +203,7 @@ export function BookingForm({
   }
 
   function validStep() {
-    if (step === 1) return values.first_name && values.last_name && values.email && values.phone && serviceSlug !== "general" && (!fixed || values.sku);
+    if (step === 1) return values.first_name && values.last_name && values.email && values.phone && serviceSlug !== "general" && (!fixed || (selectedType && values.sku));
     if (step === 2) return values.street_address && values.city && values.postcode && (fixed ? values.slot_start : values.preferred_date);
     return consent;
   }
@@ -232,35 +254,35 @@ export function BookingForm({
   }
 
   return (
-    <section className="booking-shell" style={{ "--accent": accent } as React.CSSProperties}>
+    <section className={`booking-shell ${step === 1 ? "booking-step-one" : ""}`} style={{ "--accent": accent } as React.CSSProperties}>
       <p className="booking-kicker">{fixed ? "Book it. Pay it." : "BOOK IT. WE QUOTE IT."}</p>
       <h1>{service ? `BOOK YOUR ${service.shortName}` : "BOOK A SERVICE"}</h1>
       <span className="heading-line" />
       <p className="booking-subtitle">
-        {step === 1 ? "Choose your service, see live stock, and enter your contact details." : step === 2 ? (fixed ? "Enter the service address and choose a live Cal.com time." : "Enter your address, preferred date and job details.") : (fixed ? "Review everything before continuing to secure Stripe payment." : "Review your request before sending it to our team.")}
+        {step === 1 ? (serviceSlug === "skip-2-u" ? "Choose Your Skip, Select Your Option, Enter Your Details And Pay Online." : serviceSlug === "h2o-2-u" ? "Choose Your Water Delivery, Select Your Load, Enter Your Details And Pay Online." : "Choose your service and enter your contact details.") : step === 2 ? (fixed ? "Enter the service address and choose a live Cal.com time." : "Enter your address, preferred date and job details.") : (fixed ? "Review everything before continuing to secure Stripe payment." : "Review your request before sending it to our team.")}
       </p>
 
-      {step === 1 && <div className="booking-fields two-col">
+      {step === 1 && <div className="booking-fields two-col booking-first-fields">
         <label>First name<input value={values.first_name} onChange={(e) => update("first_name", e.target.value)} placeholder="First name" /></label>
         <label>Last name<input value={values.last_name} onChange={(e) => update("last_name", e.target.value)} placeholder="Last name" /></label>
         <label>Email<input type="email" value={values.email} onChange={(e) => update("email", e.target.value)} placeholder="Email" /></label>
         <label>Phone number<input type="tel" value={values.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+64 (02) 111 111 111" /></label>
-        <label className="full">Choose a service<select value={serviceSlug} onChange={(e) => { setServiceSlug(e.target.value as ServiceSlug); setSlots([]); setValues((current) => ({ ...current, sku: "", slot_start: "", slot_end: "" })); }}><option value="general" disabled>Select one...</option>{serviceList.map((item) => <option key={item.slug} value={item.slug}>{item.shortName}</option>)}</select></label>
-        {fixed && <div className="full inventory-choice" role="radiogroup" aria-label="Choose an available option">
-          {items.length ? items.map((item) => <button
-            className={`inventory-card ${values.sku === item.sku ? "selected" : ""}`}
-            key={item.sku}
-            type="button"
-            role="radio"
-            aria-checked={values.sku === item.sku}
-            onClick={() => update("sku", item.sku)}
-          >
-            <span className="stock-badge">{item.stock_quantity === 1 ? "1 LEFT" : `${item.stock_quantity} AVAILABLE`}</span>
-            <strong>{item.name}</strong>
-            <small>{item.detail}</small>
-            <b>${(item.price_cents / 100).toFixed(0)} NZD</b>
-          </button>) : <p className="stock-empty">No stock is currently available for this service.</p>}
-        </div>}
+        {initialService === "general" && <label className="full booking-select-field">Choose a service<select value={serviceSlug} onChange={(e) => { setServiceSlug(e.target.value as ServiceSlug); setSelectedType(""); setSlots([]); setValues((current) => ({ ...current, sku: "", slot_start: "", slot_end: "" })); }}><option value="general" disabled>Select one...</option>{serviceList.map((item) => <option key={item.slug} value={item.slug}>{item.shortName}</option>)}</select></label>}
+        {fixed && <>
+          <label className="full booking-select-field">{serviceSlug === "h2o-2-u" ? "Choose an Area" : "Choose a Type"}
+            <select value={selectedType} disabled={!types.length} onChange={(event) => { setSelectedType(event.target.value); setValues((current) => ({ ...current, sku: "", slot_start: "", slot_end: "" })); }}>
+              <option value="">Select one...</option>
+              {types.map((type) => <option key={type} value={type}>{type}</option>)}
+            </select>
+          </label>
+          <label className="full booking-select-field">{serviceSlug === "h2o-2-u" ? "Choose a Load Size" : "Choose a Size"}
+            <select value={values.sku} disabled={!selectedType} onChange={(event) => update("sku", event.target.value)}>
+              <option value="">Select one...</option>
+              {sizes.map((item) => <option key={item.sku} value={item.sku}>{inventorySize(item)} — {item.stock_quantity} available · ${(item.price_cents / 100).toFixed(0)} NZD</option>)}
+            </select>
+          </label>
+          {!types.length && <p className="stock-empty full">{inventoryUnavailable ? "Availability could not be loaded. Please try again shortly." : "No stock is currently available for this service."}</p>}
+        </>}
       </div>}
 
       {step === 2 && <div className="booking-fields">

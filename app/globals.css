@@ -229,6 +229,19 @@ h1, h2, h3, h4, p { margin-top: 0; }
 
 .book-page { min-height: calc(100vh - 254px); }
 .booking-shell { max-width: 900px; min-height: 640px; margin: auto; padding: 60px 24px; text-align: center; }
+.booking-step-one { max-width: 620px; padding-top: 72px; padding-bottom: 48px; }
+.booking-step-one .booking-kicker { margin-bottom: 8px; text-decoration: underline; text-underline-offset: 2px; }
+.booking-step-one h1 { margin-bottom: 0; font-size: 38px; }
+.booking-step-one > .heading-line { width: 175px; height: 6px; margin-bottom: 0; }
+.booking-step-one .booking-subtitle { margin: 12px 0 34px; font-size: 13px; }
+.booking-step-one .booking-first-fields { gap: 8px 18px; }
+.booking-step-one .booking-first-fields label { gap: 4px; color: var(--ink); font-size: 12px; font-weight: 500; }
+.booking-step-one .booking-first-fields input, .booking-step-one .booking-first-fields select { min-height: 37px; padding: 7px 11px; border-color: #d8dfeb; border-radius: 6px; background-color: #fff; font-size: 13px; }
+.booking-step-one .booking-select-field { margin-top: 14px; }
+.booking-step-one .booking-select-field + .booking-select-field { margin-top: 12px; }
+.booking-step-one .booking-first-fields select:disabled { color: #98a2b3; background-color: #f8fafc; cursor: not-allowed; }
+.booking-step-one .stock-empty { margin: 0; }
+.booking-step-one .booking-actions { margin-top: 35px; }
 .booking-kicker { margin-bottom: 14px; color: var(--accent); font-weight: 600; }
 .booking-shell h1 { margin-bottom: 16px; font-family: var(--font-inter), sans-serif; font-size: 48px; font-weight: 600; line-height: 1.2; letter-spacing: -.96px; }
 .booking-shell > .heading-line { margin-inline: auto; }
@@ -238,14 +251,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .booking-fields .full { grid-column: 1 / -1; }
 .booking-fields label { color: var(--ink); font-weight: 500; }
 .booking-fields textarea { min-height: 110px; resize: vertical; }
-.inventory-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.inventory-card { position: relative; display: grid; gap: 6px; min-height: 148px; padding: 20px; border: 2px solid #d0d5dd; border-radius: 10px; background: #fff; color: var(--ink); text-align: left; cursor: pointer; transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
-.inventory-card:hover { transform: translateY(-2px); border-color: var(--accent); }
-.inventory-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
-.inventory-card strong { padding-right: 92px; font-size: 18px; }
-.inventory-card small { color: #667085; font-size: 14px; }
-.inventory-card b { margin-top: auto; color: var(--accent); font-size: 18px; }
-.stock-badge { position: absolute; top: 16px; right: 16px; padding: 5px 8px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, #fff); color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .04em; }
 .stock-empty { grid-column: 1 / -1; padding: 24px; border: 1px dashed #98a2b3; border-radius: 8px; text-align: center; }
 .cal-slots { display: grid; gap: 18px; padding: 20px; border: 1px solid #d0d5dd; border-radius: 10px; background: #f8fafc; }
 .cal-slots-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
@@ -339,7 +344,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .pricing-section { overflow-x: auto; }
   .price-table { min-width: 760px; }
   .booking-shell h1 { font-size: 36px; }
-  .booking-fields.two-col, .booking-fields .two-col, .booking-review, .inventory-choice { grid-template-columns: 1fr; }
+  .booking-fields.two-col, .booking-fields .two-col, .booking-review { grid-template-columns: 1fr; }
   .booking-fields .full, .payment-note { grid-column: auto; }
   .cal-slots-heading { align-items: flex-start; flex-direction: column; gap: 4px; }
 }
