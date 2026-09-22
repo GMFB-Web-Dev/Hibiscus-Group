@@ -62,9 +62,10 @@ the payment is complete.
 
 ## Stock administration
 
-The protected stock and bookings dashboard is available at `/admin`. It lists
-bookings, payment status, selected items, booking time, customer contact and
-address, plus quote requests and enquiries. Admins sign in with
+The protected dashboard is available at `/admin`. Stock controls and paid
+bookings are in separate tabs. The bookings tab shows selected items, booking
+time, customer contact and address; pending, cancelled and failed payments,
+quotes and enquiries are excluded. Admins sign in with
 Supabase Auth email and password credentials. There is deliberately no public
 sign-up route: create or invite the user from the Hibiscus Group project under
 Supabase **Authentication → Users**, then grant that user access with their Auth

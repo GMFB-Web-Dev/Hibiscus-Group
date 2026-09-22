@@ -52,6 +52,7 @@ type AdminBooking = {
 };
 
 type ViewState = "checking" | "signed-out" | "loading" | "ready" | "denied";
+type AdminTab = "stock" | "bookings";
 
 const serviceNames: Record<string, string> = {
   "skip-2-u": "SKIP 2 U",
@@ -86,6 +87,7 @@ export default function AdminDashboard() {
   const [message, setMessage] = useState("");
   const [signingIn, setSigningIn] = useState(false);
   const [savingSku, setSavingSku] = useState("");
+  const [activeTab, setActiveTab] = useState<AdminTab>("stock");
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [bookingsPage, setBookingsPage] = useState(0);
   const [bookingsTotal, setBookingsTotal] = useState(0);
@@ -133,7 +135,6 @@ export default function AdminDashboard() {
           Object.fromEntries(nextItems.map((item) => [item.sku, String(item.stock_quantity)])),
         );
         setView("ready");
-        void loadBookings(activeSession, 0);
       } catch (error) {
         const status = (error as Error & { status?: number }).status;
 
@@ -149,7 +150,7 @@ export default function AdminDashboard() {
         }
       }
     },
-    [loadBookings, supabase],
+    [supabase],
   );
 
   useEffect(() => {
@@ -196,6 +197,7 @@ export default function AdminDashboard() {
     setAdmin(null);
     setItems([]);
     setBookings([]);
+    setActiveTab("stock");
     setMessage("");
     setView("signed-out");
   }
@@ -232,6 +234,11 @@ export default function AdminDashboard() {
     }
   }
 
+  function selectTab(tab: AdminTab) {
+    setActiveTab(tab);
+    if (tab === "bookings" && session) void loadBookings(session, 0);
+  }
+
   const groups = useMemo(() => {
     const result = new Map<string, AdminItem[]>();
     for (const item of items) {
@@ -241,7 +248,7 @@ export default function AdminDashboard() {
   }, [items]);
 
   if (view === "checking" || view === "loading") {
-    return <main className="admin-loading">Loading secure stock controls…</main>;
+    return <main className="admin-loading">Loading secure dashboard…</main>;
   }
 
   if (view === "signed-out") {
@@ -250,9 +257,9 @@ export default function AdminDashboard() {
         <section className="admin-login-card" aria-labelledby="admin-login-title">
           <p className="admin-wordmark">HIBISCUS GROUP</p>
           <p className="admin-eyebrow">SECURE STAFF ACCESS</p>
-          <h1 id="admin-login-title">Stock administration</h1>
+          <h1 id="admin-login-title">Staff dashboard</h1>
           <span className="admin-heading-line" aria-hidden="true" />
-          <p>Sign in with an approved admin account to manage booking availability.</p>
+          <p>Sign in with an approved admin account to manage stock and view paid bookings.</p>
 
           <form className="admin-login-form" onSubmit={signIn}>
             <label>
@@ -315,18 +322,24 @@ export default function AdminDashboard() {
         <div className="admin-title-row">
           <div>
             <p className="admin-eyebrow">BOOKING MANAGEMENT</p>
-            <h1>Stock control</h1>
+            <h1>{activeTab === "stock" ? "Stock control" : "Paid bookings"}</h1>
             <span className="admin-heading-line" aria-hidden="true" />
           </div>
           <button
             className="admin-refresh"
             type="button"
-            onClick={() => session && void loadInventory(session)}
+            onClick={() => session && (activeTab === "stock" ? void loadInventory(session) : void loadBookings(session, bookingsPage))}
           >
-            Refresh stock
+            {activeTab === "stock" ? "Refresh stock" : "Refresh bookings"}
           </button>
         </div>
 
+        <div className="admin-tabs" role="tablist" aria-label="Admin sections">
+          <button id="admin-stock-tab" type="button" role="tab" aria-controls="admin-stock-panel" aria-selected={activeTab === "stock"} onClick={() => selectTab("stock")}>Stock control</button>
+          <button id="admin-bookings-tab" type="button" role="tab" aria-controls="admin-bookings-panel" aria-selected={activeTab === "bookings"} onClick={() => selectTab("bookings")}>Paid bookings</button>
+        </div>
+
+        {activeTab === "stock" && <div id="admin-stock-panel" role="tabpanel" aria-labelledby="admin-stock-tab">
         <p className="admin-intro">
           Set total stock for each booking option. Active unpaid reservations are shown separately,
           so the available figure matches what customers see.
@@ -416,19 +429,20 @@ export default function AdminDashboard() {
             </div>
           </section>
         ))}
+        </div>}
 
-        <section className="admin-bookings" aria-labelledby="admin-bookings-heading">
+        {activeTab === "bookings" && <section className="admin-bookings" id="admin-bookings-panel" role="tabpanel" aria-labelledby="admin-bookings-tab">
           <div className="admin-bookings-heading">
             <div>
-              <p className="admin-eyebrow">CUSTOMER REQUESTS</p>
-              <h2 id="admin-bookings-heading">Bookings & enquiries</h2>
+              <p className="admin-eyebrow">CONFIRMED PAYMENTS</p>
+              <h2 id="admin-bookings-heading">Paid customer bookings</h2>
             </div>
-            <p>Paid bookings are confirmed; pending payments are not. Quote requests and enquiries are listed here too.</p>
+            <p>Only paid bookings appear here. Pending, cancelled and failed payments are excluded.</p>
           </div>
 
           {bookingsError ? <p className="admin-alert error" role="alert">{bookingsError}</p> : null}
           {bookingsLoading ? <p>Loading bookings…</p> : null}
-          {!bookingsLoading && !bookings.length ? <p>No requests on this page yet.</p> : null}
+          {!bookingsLoading && !bookings.length ? <p>No paid bookings on this page yet.</p> : null}
 
           <div className="admin-booking-list">
             {bookings.map((booking) => {
@@ -446,14 +460,14 @@ export default function AdminDashboard() {
               return <article className="admin-booking-card" key={booking.id}>
                 <div className="admin-booking-main">
                   <div>
-                    <p className="admin-booking-kind">{booking.request_kind} · {service}</p>
+                    <p className="admin-booking-kind">Paid booking · {service}</p>
                     <h3>{booking.first_name} {booking.last_name}</h3>
                     <p>{bookedTime}</p>
                     <p>Reference: {booking.id.slice(0, 8).toUpperCase()}</p>
                   </div>
                   <div className="admin-booking-badges">
                     <span className={booking.payment_status === "paid" ? "paid" : ""}>
-                      {booking.request_kind === "booking" ? `Payment: ${booking.payment_status}` : booking.status}
+                      Payment: {booking.payment_status}
                     </span>
                     <small>{new Date(booking.created_at).toLocaleDateString("en-NZ")}</small>
                   </div>
@@ -461,8 +475,8 @@ export default function AdminDashboard() {
                 <div className="admin-booking-details">
                   <div><span>Items</span><strong>{booking.items.length
                     ? booking.items.map((item) => `${item.quantity} × ${items.find((stock) => stock.sku === item.sku)?.name ?? item.sku}`).join(", ")
-                    : "Quote / enquiry"}</strong></div>
-                  <div><span>Total</span><strong>{booking.items.length ? `$${(total / 100).toFixed(2)} NZD` : "To quote"}</strong></div>
+                    : "No items recorded"}</strong></div>
+                  <div><span>Total</span><strong>{booking.items.length ? `$${(total / 100).toFixed(2)} NZD` : "—"}</strong></div>
                   <div><span>Contact</span><strong><a href={`mailto:${booking.email}`}>{booking.email}</a><br /><a href={`tel:${booking.phone}`}>{booking.phone}</a></strong></div>
                   <div><span>Address</span><strong>{[booking.street_address, booking.address_line_2, booking.city, booking.postcode].filter(Boolean).join(", ") || "Not provided"}</strong></div>
                   {booking.message ? <div className="admin-booking-notes"><span>Notes</span><strong>{booking.message}</strong></div> : null}
@@ -472,13 +486,13 @@ export default function AdminDashboard() {
           </div>
 
           <div className="admin-booking-pagination">
-            <span>{bookingsTotal} total requests · Page {bookingsPage + 1}</span>
+            <span>{bookingsTotal} paid bookings · Page {bookingsPage + 1}</span>
             <div>
               <button type="button" disabled={bookingsLoading || bookingsPage === 0} onClick={() => session && void loadBookings(session, bookingsPage - 1)}>Previous</button>
               <button type="button" disabled={bookingsLoading || !bookingsHasMore} onClick={() => session && void loadBookings(session, bookingsPage + 1)}>Next</button>
             </div>
           </div>
-        </section>
+        </section>}
       </section>
     </main>
   );

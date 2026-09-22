@@ -50,7 +50,8 @@ export async function GET(request: Request) {
     const { data, error, count } = await supabase
       .from("customer_requests")
       .select("id, request_kind, service_slug, first_name, last_name, email, phone, street_address, address_line_2, city, postcode, preferred_date, preferred_time, cal_start_at, cal_time_zone, cal_booking_uid, stripe_checkout_session_id, payment_status, status, message, created_at", { count: "exact" })
-      .in("request_kind", ["booking", "quote", "enquiry"])
+      .eq("request_kind", "booking")
+      .eq("payment_status", "paid")
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .range(start, start + PAGE_SIZE - 1);

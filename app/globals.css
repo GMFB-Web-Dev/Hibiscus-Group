@@ -374,6 +374,11 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .admin-heading-line { width: 150px; height: 7px; display: block; border-radius: 999px; background: var(--pink); }
 .admin-refresh { color: var(--ink); }
 .admin-refresh:hover { background: var(--ink); color: #fff; }
+.admin-tabs { margin-top: 34px; display: flex; gap: 6px; border-bottom: 1px solid #d8d9dc; }
+.admin-tabs button { margin-bottom: -1px; padding: 14px 19px; border: 1px solid transparent; border-bottom: 3px solid transparent; border-radius: 7px 7px 0 0; background: transparent; color: #525866; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.admin-tabs button:hover { color: var(--pink); }
+.admin-tabs button[aria-selected="true"] { border-color: #d8d9dc; border-bottom-color: var(--pink); background: #fff; color: var(--ink); }
+.admin-tabs button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
 .admin-intro { max-width: 760px; margin: 24px 0 42px; color: #525866; line-height: 1.65; }
 .admin-alert { margin: 0 0 22px; padding: 13px 16px; border-left: 4px solid #208344; background: #e6f5eb; color: #12562c; font-weight: 600; }
 .admin-alert.error { border-left-color: #c40036; background: #fff0f3; color: #8b0026; }
@@ -432,7 +437,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .admin-login-form input:focus { border-color: var(--pink); outline: 3px solid color-mix(in srgb, var(--pink) 18%, transparent); }
 .admin-login-form .button, .admin-login-card > .button { width: 100%; min-height: 48px; margin-top: 4px; border: 0; background: var(--pink); cursor: pointer; }
 .admin-back-link { margin-top: 28px; display: inline-block; color: #525866; font-size: 14px; }
-.admin-bookings { margin-top: 72px; }
+.admin-bookings { margin-top: 28px; }
 .admin-bookings-heading { margin-bottom: 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
 .admin-bookings-heading h2 { margin: 4px 0 0; font-family: var(--font-inter), sans-serif; font-size: 32px; font-weight: 600; letter-spacing: -.02em; }
 .admin-bookings-heading > p { max-width: 530px; margin: 0; color: #667085; font-size: 14px; line-height: 1.55; text-align: right; }
@@ -475,6 +480,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 }
 
 @media (max-width: 560px) {
+  .admin-tabs button { flex: 1; padding-inline: 9px; }
   .admin-booking-main { flex-direction: column; }
   .admin-booking-badges { justify-items: start; }
   .admin-booking-details { grid-template-columns: 1fr; }

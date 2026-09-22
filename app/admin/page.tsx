@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import AdminDashboard from "@/components/admin-dashboard";
 
 export const metadata: Metadata = {
-  title: "Stock Administration | Hibiscus Group",
+  title: "Staff Dashboard | Hibiscus Group",
   robots: {
     index: false,
     follow: false,
