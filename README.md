@@ -47,6 +47,35 @@ Pending reservations reduce the stock shown on page one without changing the
 stored stock quantity. Paid checkout fulfillment decrements stock atomically;
 expired or failed checkout cancels the Cal.com booking and releases the hold.
 
+## Stock administration
+
+The protected stock dashboard is available at `/admin`. Admins sign in with
+Supabase Auth email and password credentials. There is deliberately no public
+sign-up route: create or invite the user from the Hibiscus Group project under
+Supabase **Authentication → Users**, then grant that user access with their Auth
+UUID in the SQL editor:
+
+```sql
+insert into public.admin_users (user_id, email, display_name)
+values ('USER_UUID', 'admin@example.com', 'Administrator name')
+on conflict (user_id) do update
+set email = excluded.email,
+    display_name = excluded.display_name,
+    active = true;
+```
+
+To revoke access without deleting the Supabase Auth account:
+
+```sql
+update public.admin_users
+set active = false
+where user_id = 'USER_UUID';
+```
+
+Apply all migrations in `supabase/migrations` before opening the dashboard.
+Every stock update is checked by the server against `admin_users` and recorded
+in `inventory_adjustments`. Keep `SUPABASE_SECRET_KEY` server-only in Vercel.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
