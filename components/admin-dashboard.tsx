@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import {
+  type CSSProperties,
   type FormEvent,
   useCallback,
   useEffect,
@@ -31,9 +32,17 @@ type AdminIdentity = {
 type ViewState = "checking" | "signed-out" | "loading" | "ready" | "denied";
 
 const serviceNames: Record<string, string> = {
-  skip: "Skip 2 U",
-  h2o: "H2O 2 U",
+  "skip-2-u": "SKIP 2 U",
+  "h2o-2-u": "H2O 2 U",
 };
+
+const serviceOverview = [
+  { slug: "skip-2-u", name: "SKIP 2 U", accent: "#e52169", stockManaged: true },
+  { slug: "h2o-2-u", name: "H2O 2 U", accent: "#3989d3", stockManaged: true },
+  { slug: "wash-2-u", name: "WASH 2 U", accent: "#f36f07", stockManaged: false },
+  { slug: "arb-2-u", name: "ARB 2 U", accent: "#2d8a32", stockManaged: false },
+  { slug: "dig-tip-2-u", name: "DIG & TIP 2 U", accent: "#f8c919", stockManaged: false },
+] as const;
 
 async function readJson(response: Response) {
   const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
@@ -185,6 +194,18 @@ export default function AdminDashboard() {
     return [...result.entries()];
   }, [items]);
 
+  const serviceSummaries = useMemo(() => serviceOverview.map((service) => {
+    const serviceItems = items.filter((item) => item.service_slug === service.slug);
+
+    return {
+      ...service,
+      optionCount: serviceItems.length,
+      activeOptionCount: serviceItems.filter((item) => item.active).length,
+      reservedQuantity: serviceItems.reduce((total, item) => total + item.reserved_quantity, 0),
+      availableQuantity: serviceItems.reduce((total, item) => total + item.available_quantity, 0),
+    };
+  }), [items]);
+
   if (view === "checking" || view === "loading") {
     return <main className="admin-loading">Loading secure stock controls…</main>;
   }
@@ -260,7 +281,7 @@ export default function AdminDashboard() {
         <div className="admin-title-row">
           <div>
             <p className="admin-eyebrow">BOOKING MANAGEMENT</p>
-            <h1>Stock control</h1>
+            <h1>Service dashboard</h1>
             <span className="admin-heading-line" aria-hidden="true" />
           </div>
           <button
@@ -273,11 +294,63 @@ export default function AdminDashboard() {
         </div>
 
         <p className="admin-intro">
-          Set total stock for each booking option. Active unpaid reservations are shown separately,
-          so the available figure matches what customers see.
+          Review every Hibiscus Group service in one place. Fixed-price services include live stock
+          controls; quote-based services do not require inventory.
         </p>
 
         {message ? <p className="admin-alert" role="status">{message}</p> : null}
+
+        <section className="admin-services-overview" aria-labelledby="admin-services-heading">
+          <div className="admin-section-heading">
+            <div>
+              <p className="admin-eyebrow">ALL SERVICES</p>
+              <h2 id="admin-services-heading">Service overview</h2>
+            </div>
+            <span>{serviceSummaries.length} services</span>
+          </div>
+
+          <div className="admin-service-grid">
+            {serviceSummaries.map((service) => (
+              <article
+                className="admin-service-card"
+                key={service.slug}
+                style={{ "--service-accent": service.accent } as CSSProperties}
+              >
+                <div className="admin-service-card-topline">
+                  <h3>{service.name}</h3>
+                  <span className={service.stockManaged ? "stocked" : "quoted"}>
+                    {service.stockManaged ? "Stock managed" : "Quote-based"}
+                  </span>
+                </div>
+
+                {service.stockManaged ? (
+                  <>
+                    <p><strong>{service.availableQuantity}</strong> available across {service.optionCount} options</p>
+                    <small>
+                      {service.reservedQuantity} currently reserved · {service.activeOptionCount} active options
+                    </small>
+                  </>
+                ) : (
+                  <>
+                    <p><strong>No inventory required</strong></p>
+                    <small>Customer enquiries are handled through the quote request workflow.</small>
+                  </>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <div className="admin-stock-heading">
+          <div>
+            <p className="admin-eyebrow">FIXED-PRICE SERVICES</p>
+            <h2>Stock control</h2>
+          </div>
+          <p>
+            Active unpaid reservations are shown separately, so available stock matches what
+            customers see on the booking page.
+          </p>
+        </div>
 
         {groups.map(([serviceSlug, serviceItems]) => (
           <section className="admin-inventory-group" key={serviceSlug}>
@@ -302,6 +375,9 @@ export default function AdminDashboard() {
                     <div className="admin-item-name">
                       <strong>{item.name}</strong>
                       <span>{item.detail || item.sku}</span>
+                      <em className={item.active ? "active" : "inactive"}>
+                        {item.active ? "Active on booking page" : "Inactive"}
+                      </em>
                     </div>
                     <div className="admin-stat">
                       <span className="admin-mobile-label">Reserved</span>

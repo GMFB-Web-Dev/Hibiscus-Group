@@ -364,6 +364,23 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .admin-intro { max-width: 760px; margin: 24px 0 42px; color: #525866; line-height: 1.65; }
 .admin-alert { margin: 0 0 22px; padding: 13px 16px; border-left: 4px solid #208344; background: #e6f5eb; color: #12562c; font-weight: 600; }
 .admin-alert.error { border-left-color: #c40036; background: #fff0f3; color: #8b0026; }
+.admin-services-overview { margin-bottom: 54px; }
+.admin-section-heading, .admin-stock-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; }
+.admin-section-heading { margin-bottom: 18px; }
+.admin-section-heading h2, .admin-stock-heading h2 { margin: 3px 0 0; font-family: var(--font-inter), sans-serif; font-size: 30px; font-weight: 600; letter-spacing: -.02em; }
+.admin-section-heading > span { color: #667085; font-size: 13px; }
+.admin-service-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.admin-service-card { min-height: 190px; padding: 18px; display: flex; flex-direction: column; border: 1px solid #d8d9dc; border-top: 5px solid var(--service-accent); border-radius: 9px; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .035); }
+.admin-service-card-topline { display: grid; gap: 10px; }
+.admin-service-card h3 { margin: 0; font-family: var(--font-inter), sans-serif; font-size: 18px; line-height: 1.2; }
+.admin-service-card-topline > span { width: max-content; padding: 4px 8px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.admin-service-card-topline .stocked { background: #e7f6ec; color: #176235; }
+.admin-service-card-topline .quoted { background: #f1f2f4; color: #525866; }
+.admin-service-card p { margin: auto 0 4px; color: #414754; font-size: 13px; }
+.admin-service-card p strong { display: block; color: var(--ink); font-size: 22px; }
+.admin-service-card small { color: #667085; line-height: 1.45; }
+.admin-stock-heading { margin-bottom: 18px; padding-top: 4px; }
+.admin-stock-heading > p { max-width: 580px; margin: 0; color: #667085; font-size: 14px; line-height: 1.55; text-align: right; }
 .admin-inventory-group { margin-top: 30px; overflow: hidden; border: 1px solid #d8d9dc; border-radius: 10px; background: #fff; box-shadow: 0 10px 35px rgba(0, 0, 0, .045); }
 .admin-group-heading { min-height: 72px; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid #e7e7e8; }
 .admin-group-heading h2 { margin: 0; font-family: var(--font-inter), sans-serif; font-size: 25px; font-weight: 600; }
@@ -376,6 +393,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .admin-item-name { display: grid; gap: 4px; }
 .admin-item-name strong { font-size: 16px; }
 .admin-item-name span { color: #667085; font-size: 13px; }
+.admin-item-name em { width: max-content; margin-top: 3px; padding: 2px 7px; border-radius: 999px; font-size: 10px; font-style: normal; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
+.admin-item-name em.active { background: #e7f6ec; color: #176235; }
+.admin-item-name em.inactive { background: #fff0f3; color: #8b0026; }
 .admin-stat strong { font-size: 20px; }
 .admin-mobile-label { display: none; }
 .admin-stock-input { display: flex; align-items: stretch; }
@@ -401,6 +421,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .admin-back-link { margin-top: 28px; display: inline-block; color: #525866; font-size: 14px; }
 
 @media (max-width: 860px) {
+  .admin-service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-stock-heading { align-items: flex-start; flex-direction: column; }
+  .admin-stock-heading > p { max-width: 680px; text-align: left; }
   .admin-table-header { display: none; }
   .admin-stock-row { grid-template-columns: 1fr 1fr; gap: 18px; }
   .admin-item-name { grid-column: 1 / -1; }
@@ -417,6 +440,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .admin-content { width: min(100% - 28px, 1180px); padding-top: 42px; }
   .admin-title-row { align-items: flex-start; flex-direction: column; }
   .admin-refresh { width: 100%; }
+  .admin-section-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .admin-service-grid { grid-template-columns: 1fr; }
+  .admin-service-card { min-height: 165px; }
   .admin-group-heading, .admin-stock-row { padding-inline: 16px; }
   .admin-stock-row { grid-template-columns: 1fr; }
   .admin-item-name, .admin-stock-input { grid-column: auto; }
