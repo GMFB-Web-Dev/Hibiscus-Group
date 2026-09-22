@@ -46,10 +46,11 @@ inventory reservation, books the Cal.com event, and redirects to Stripe.
 Pending reservations reduce the stock shown on page one without changing the
 stored stock quantity. Paid checkout fulfillment decrements stock atomically;
 expired or failed checkout cancels the Cal.com booking and releases the hold.
-Customers can add several distinct options, or set a quantity, for one booking
-time. The 4.5m³ Large Mini Skip is limited to one and cannot be combined with
-another item. Each item is charged in the same Checkout session and all stock
-is deducted together only after payment succeeds.
+Customers can book at most two units for one booking time, either as two
+different options or quantity two of one option. The 4.5m³ Large Mini Skip is
+limited to one and cannot be combined with another item. Each item is charged
+in the same Checkout session and all stock is deducted together only after
+payment succeeds.
 
 The customer sees a confirmation page and booking reference once payment and
 fulfillment are verified. The site does not currently send its own booking

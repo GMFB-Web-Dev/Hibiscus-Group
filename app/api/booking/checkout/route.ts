@@ -49,11 +49,14 @@ export async function POST(request: Request) {
     const slotEnd = new Date(text(body.slot_end, 40));
     const consentTerms = body.consent_terms === true;
 
-    if (!fixedPriceServices.has(serviceSlug) || cartItems.length < 1 || cartItems.length > 10
+    if (!fixedPriceServices.has(serviceSlug) || cartItems.length < 1
       || cartItems.some((item) => !item.sku || typeof item.quantity !== "number"
-        || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10)
+        || !Number.isInteger(item.quantity) || item.quantity < 1)
       || new Set(cartItems.map((item) => item.sku)).size !== cartItems.length) {
       return Response.json({ error: "Choose a valid fixed-price service." }, { status: 400 });
+    }
+    if (cartItems.length > 2 || cartItems.reduce((total, item) => total + (item.quantity as number), 0) > 2) {
+      return Response.json({ error: "You can book a maximum of two items for one time slot." }, { status: 400 });
     }
     if (cartItems.some((item) => item.sku === "skip-rubbish-45")
       && (cartItems.length !== 1 || cartItems[0].quantity !== 1)) {

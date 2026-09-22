@@ -128,6 +128,7 @@ type CalSlot = { start: string; end: string };
 type CartLine = { id: number; type: string; sku: string; quantity: number };
 const emptyCartLine = (id: number): CartLine => ({ id, type: "", sku: "", quantity: 1 });
 const LARGE_SKIP_SKU = "skip-rubbish-45";
+const MAX_BOOKING_ITEMS = 2;
 
 async function readJson(response: Response) {
   const body = await response.json();
@@ -167,6 +168,7 @@ export function BookingForm({
   }));
   const cartTotal = selectedItems.reduce((total, line) =>
     total + (line.item?.price_cents ?? 0) * line.quantity, 0);
+  const cartQuantity = cart.reduce((total, line) => total + line.quantity, 0);
   const largeSkipSelected = cart.some((line) => line.sku === LARGE_SKIP_SKU);
   const fixed = service?.fixedPrice ?? false;
 
@@ -216,7 +218,10 @@ export function BookingForm({
   }
 
   function addCartLine() {
-    setCart((current) => [...current, emptyCartLine(nextCartId)]);
+    if (largeSkipSelected || cartQuantity >= MAX_BOOKING_ITEMS) return;
+    setCart((current) => current.reduce((total, line) => total + line.quantity, 0) >= MAX_BOOKING_ITEMS
+      ? current
+      : [...current, emptyCartLine(nextCartId)]);
     setNextCartId((current) => current + 1);
     setValues((current) => ({ ...current, slot_start: "", slot_end: "" }));
   }
@@ -229,7 +234,7 @@ export function BookingForm({
   function validStep() {
     if (step === 1) {
       const skus = cart.map((line) => line.sku);
-      const cartValid = cart.length > 0
+      const cartValid = cart.length > 0 && cartQuantity <= MAX_BOOKING_ITEMS
         && cart.every((line) => {
           const item = items.find((candidate) => candidate.sku === line.sku);
           return Boolean(item && Number.isInteger(line.quantity)
@@ -328,14 +333,15 @@ export function BookingForm({
               </label>
               {selectedItem && <label className="booking-quantity-field">Quantity
                 <select value={line.quantity} onChange={(event) => updateCartLine(line.id, { quantity: Number(event.target.value) })}>
-                  {Array.from({ length: Math.min(selectedItem.stock_quantity, selectedItem.sku === LARGE_SKIP_SKU ? 1 : 10) }, (_, quantity) => quantity + 1).map((quantity) => <option key={quantity} value={quantity}>{quantity}</option>)}
+                  {Array.from({ length: Math.min(selectedItem.stock_quantity, selectedItem.sku === LARGE_SKIP_SKU ? 1 : MAX_BOOKING_ITEMS - (cartQuantity - line.quantity)) }, (_, quantity) => quantity + 1).map((quantity) => <option key={quantity} value={quantity}>{quantity}</option>)}
                 </select>
               </label>}
             </div>;
           })}
           <div className="booking-cart-actions full">
-            <button type="button" disabled={largeSkipSelected || cart.length >= 10 || cart.some((line) => !line.sku)} onClick={addCartLine}>+ ADD ANOTHER ITEM</button>
+            {!largeSkipSelected && cartQuantity < MAX_BOOKING_ITEMS && <button type="button" disabled={cart.some((line) => !line.sku)} onClick={addCartLine}>+ ADD ANOTHER ITEM</button>}
             {largeSkipSelected && <span>The 4.5m³ Large Mini Skip must be booked on its own, with a quantity of one.</span>}
+            {!largeSkipSelected && cartQuantity >= MAX_BOOKING_ITEMS && <span>Maximum of two items per booking time.</span>}
             {cart.some((line) => line.sku) && <strong>Total: ${(cartTotal / 100).toFixed(2)} NZD</strong>}
           </div>
           {!types.length && <p className="stock-empty full">{inventoryUnavailable ? "Availability could not be loaded. Please try again shortly." : "No stock is currently available for this service."}</p>}
