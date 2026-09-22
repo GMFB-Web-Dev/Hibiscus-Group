@@ -28,11 +28,37 @@ type AdminIdentity = {
   email: string | null;
 };
 
+type AdminBooking = {
+  id: string;
+  request_kind: string;
+  service_slug: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  street_address: string | null;
+  address_line_2: string | null;
+  city: string | null;
+  postcode: string | null;
+  preferred_date: string | null;
+  preferred_time: string | null;
+  cal_start_at: string | null;
+  cal_time_zone: string | null;
+  payment_status: string;
+  status: string;
+  message: string | null;
+  created_at: string;
+  items: Array<{ sku: string; quantity: number; amount_cents: number | null }>;
+};
+
 type ViewState = "checking" | "signed-out" | "loading" | "ready" | "denied";
 
 const serviceNames: Record<string, string> = {
-  skip: "Skip 2 U",
-  h2o: "H2O 2 U",
+  "skip-2-u": "SKIP 2 U",
+  "h2o-2-u": "H2O 2 U",
+  "wash-2-u": "WASH 2 U",
+  "arb-2-u": "ARB 2 U",
+  "dig-tip-2-u": "DIG & TIP 2 U",
 };
 
 async function readJson(response: Response) {
@@ -60,6 +86,33 @@ export default function AdminDashboard() {
   const [message, setMessage] = useState("");
   const [signingIn, setSigningIn] = useState(false);
   const [savingSku, setSavingSku] = useState("");
+  const [bookings, setBookings] = useState<AdminBooking[]>([]);
+  const [bookingsPage, setBookingsPage] = useState(0);
+  const [bookingsTotal, setBookingsTotal] = useState(0);
+  const [bookingsHasMore, setBookingsHasMore] = useState(false);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [bookingsError, setBookingsError] = useState("");
+
+  const loadBookings = useCallback(async (activeSession: Session, page: number) => {
+    setBookingsLoading(true);
+    setBookingsError("");
+
+    try {
+      const response = await fetch(`/api/admin/bookings?page=${page}`, {
+        headers: { Authorization: `Bearer ${activeSession.access_token}` },
+        cache: "no-store",
+      });
+      const body = await readJson(response);
+      setBookings((body.bookings ?? []) as AdminBooking[]);
+      setBookingsPage(page);
+      setBookingsTotal(body.total as number);
+      setBookingsHasMore(body.has_more as boolean);
+    } catch (error) {
+      setBookingsError(error instanceof Error ? error.message : "Bookings could not be loaded.");
+    } finally {
+      setBookingsLoading(false);
+    }
+  }, []);
 
   const loadInventory = useCallback(
     async (activeSession: Session) => {
@@ -80,6 +133,7 @@ export default function AdminDashboard() {
           Object.fromEntries(nextItems.map((item) => [item.sku, String(item.stock_quantity)])),
         );
         setView("ready");
+        void loadBookings(activeSession, 0);
       } catch (error) {
         const status = (error as Error & { status?: number }).status;
 
@@ -95,7 +149,7 @@ export default function AdminDashboard() {
         }
       }
     },
-    [supabase],
+    [loadBookings, supabase],
   );
 
   useEffect(() => {
@@ -141,6 +195,7 @@ export default function AdminDashboard() {
     setSession(null);
     setAdmin(null);
     setItems([]);
+    setBookings([]);
     setMessage("");
     setView("signed-out");
   }
@@ -361,6 +416,69 @@ export default function AdminDashboard() {
             </div>
           </section>
         ))}
+
+        <section className="admin-bookings" aria-labelledby="admin-bookings-heading">
+          <div className="admin-bookings-heading">
+            <div>
+              <p className="admin-eyebrow">CUSTOMER REQUESTS</p>
+              <h2 id="admin-bookings-heading">Bookings & enquiries</h2>
+            </div>
+            <p>Paid bookings are confirmed; pending payments are not. Quote requests and enquiries are listed here too.</p>
+          </div>
+
+          {bookingsError ? <p className="admin-alert error" role="alert">{bookingsError}</p> : null}
+          {bookingsLoading ? <p>Loading bookings…</p> : null}
+          {!bookingsLoading && !bookings.length ? <p>No requests on this page yet.</p> : null}
+
+          <div className="admin-booking-list">
+            {bookings.map((booking) => {
+              const service = serviceNames[booking.service_slug] ?? booking.service_slug;
+              const bookedTime = booking.cal_start_at
+                ? new Intl.DateTimeFormat("en-NZ", {
+                  timeZone: booking.cal_time_zone || "Pacific/Auckland",
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }).format(new Date(booking.cal_start_at))
+                : [booking.preferred_date, booking.preferred_time].filter(Boolean).join(" ") || "Not selected";
+              const total = booking.items.reduce((amount, item) =>
+                amount + (item.amount_cents ?? 0) * item.quantity, 0);
+
+              return <article className="admin-booking-card" key={booking.id}>
+                <div className="admin-booking-main">
+                  <div>
+                    <p className="admin-booking-kind">{booking.request_kind} · {service}</p>
+                    <h3>{booking.first_name} {booking.last_name}</h3>
+                    <p>{bookedTime}</p>
+                    <p>Reference: {booking.id.slice(0, 8).toUpperCase()}</p>
+                  </div>
+                  <div className="admin-booking-badges">
+                    <span className={booking.payment_status === "paid" ? "paid" : ""}>
+                      {booking.request_kind === "booking" ? `Payment: ${booking.payment_status}` : booking.status}
+                    </span>
+                    <small>{new Date(booking.created_at).toLocaleDateString("en-NZ")}</small>
+                  </div>
+                </div>
+                <div className="admin-booking-details">
+                  <div><span>Items</span><strong>{booking.items.length
+                    ? booking.items.map((item) => `${item.quantity} × ${items.find((stock) => stock.sku === item.sku)?.name ?? item.sku}`).join(", ")
+                    : "Quote / enquiry"}</strong></div>
+                  <div><span>Total</span><strong>{booking.items.length ? `$${(total / 100).toFixed(2)} NZD` : "To quote"}</strong></div>
+                  <div><span>Contact</span><strong><a href={`mailto:${booking.email}`}>{booking.email}</a><br /><a href={`tel:${booking.phone}`}>{booking.phone}</a></strong></div>
+                  <div><span>Address</span><strong>{[booking.street_address, booking.address_line_2, booking.city, booking.postcode].filter(Boolean).join(", ") || "Not provided"}</strong></div>
+                  {booking.message ? <div className="admin-booking-notes"><span>Notes</span><strong>{booking.message}</strong></div> : null}
+                </div>
+              </article>;
+            })}
+          </div>
+
+          <div className="admin-booking-pagination">
+            <span>{bookingsTotal} total requests · Page {bookingsPage + 1}</span>
+            <div>
+              <button type="button" disabled={bookingsLoading || bookingsPage === 0} onClick={() => session && void loadBookings(session, bookingsPage - 1)}>Previous</button>
+              <button type="button" disabled={bookingsLoading || !bookingsHasMore} onClick={() => session && void loadBookings(session, bookingsPage + 1)}>Next</button>
+            </div>
+          </div>
+        </section>
       </section>
     </main>
   );

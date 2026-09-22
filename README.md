@@ -46,10 +46,25 @@ inventory reservation, books the Cal.com event, and redirects to Stripe.
 Pending reservations reduce the stock shown on page one without changing the
 stored stock quantity. Paid checkout fulfillment decrements stock atomically;
 expired or failed checkout cancels the Cal.com booking and releases the hold.
+Customers can add several distinct options, or set a quantity, for one booking
+time. The 4.5m³ Large Mini Skip is limited to one and cannot be combined with
+another item. Each item is charged in the same Checkout session and all stock
+is deducted together only after payment succeeds.
+
+The customer sees a confirmation page and booking reference once payment and
+fulfillment are verified. The site does not currently send its own booking
+confirmation email. Enable Stripe's successful-payment receipts in the Stripe
+Dashboard if payment receipts are wanted; a separate transactional email
+integration is needed for a branded email containing the booking details.
+Check the Cal.com event notification settings as well: its booking is created
+before payment to hold the time, so any Cal.com booking email may arrive before
+the payment is complete.
 
 ## Stock administration
 
-The protected stock dashboard is available at `/admin`. Admins sign in with
+The protected stock and bookings dashboard is available at `/admin`. It lists
+bookings, payment status, selected items, booking time, customer contact and
+address, plus quote requests and enquiries. Admins sign in with
 Supabase Auth email and password credentials. There is deliberately no public
 sign-up route: create or invite the user from the Hibiscus Group project under
 Supabase **Authentication → Users**, then grant that user access with their Auth

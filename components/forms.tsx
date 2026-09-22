@@ -105,7 +105,6 @@ type BookingValues = {
   last_name: string;
   email: string;
   phone: string;
-  sku: string;
   street_address: string;
   address_line_2: string;
   city: string;
@@ -119,13 +118,16 @@ type BookingValues = {
 };
 
 const emptyValues: BookingValues = {
-  first_name: "", last_name: "", email: "", phone: "", sku: "",
+  first_name: "", last_name: "", email: "", phone: "",
   street_address: "", address_line_2: "", city: "", postcode: "",
   preferred_date: "", preferred_time: "", slot_start: "", slot_end: "",
   time_zone: "Pacific/Auckland", message: "",
 };
 
 type CalSlot = { start: string; end: string };
+type CartLine = { id: number; type: string; sku: string; quantity: number };
+const emptyCartLine = (id: number): CartLine => ({ id, type: "", sku: "", quantity: 1 });
+const LARGE_SKIP_SKU = "skip-rubbish-45";
 
 async function readJson(response: Response) {
   const body = await response.json();
@@ -145,7 +147,8 @@ export function BookingForm({
   checkoutCancelled?: boolean;
 }) {
   const [serviceSlug, setServiceSlug] = useState<ServiceSlug | "general">(initialService);
-  const [selectedType, setSelectedType] = useState("");
+  const [cart, setCart] = useState<CartLine[]>([emptyCartLine(0)]);
+  const [nextCartId, setNextCartId] = useState(1);
   const [step, setStep] = useState(1);
   const [values, setValues] = useState(emptyValues);
   const [consent, setConsent] = useState(false);
@@ -158,8 +161,13 @@ export function BookingForm({
   const accent = service?.accent || "#e91e63";
   const items = inventory.filter((item) => item.service_slug === serviceSlug);
   const types = [...new Set(items.map(inventoryType))];
-  const sizes = items.filter((item) => inventoryType(item) === selectedType);
-  const selected = items.find((item) => item.sku === values.sku);
+  const selectedItems = cart.map((line) => ({
+    ...line,
+    item: items.find((item) => item.sku === line.sku),
+  }));
+  const cartTotal = selectedItems.reduce((total, line) =>
+    total + (line.item?.price_cents ?? 0) * line.quantity, 0);
+  const largeSkipSelected = cart.some((line) => line.sku === LARGE_SKIP_SKU);
   const fixed = service?.fixedPrice ?? false;
 
   useEffect(() => {
@@ -202,8 +210,37 @@ export function BookingForm({
     setValues((current) => ({ ...current, [name]: value }));
   }
 
+  function updateCartLine(id: number, patch: Partial<CartLine>) {
+    setCart((current) => current.map((line) => line.id === id ? { ...line, ...patch } : line));
+    setValues((current) => ({ ...current, slot_start: "", slot_end: "" }));
+  }
+
+  function addCartLine() {
+    setCart((current) => [...current, emptyCartLine(nextCartId)]);
+    setNextCartId((current) => current + 1);
+    setValues((current) => ({ ...current, slot_start: "", slot_end: "" }));
+  }
+
+  function removeCartLine(id: number) {
+    setCart((current) => current.filter((line) => line.id !== id));
+    setValues((current) => ({ ...current, slot_start: "", slot_end: "" }));
+  }
+
   function validStep() {
-    if (step === 1) return values.first_name && values.last_name && values.email && values.phone && serviceSlug !== "general" && (!fixed || (selectedType && values.sku));
+    if (step === 1) {
+      const skus = cart.map((line) => line.sku);
+      const cartValid = cart.length > 0
+        && cart.every((line) => {
+          const item = items.find((candidate) => candidate.sku === line.sku);
+          return Boolean(item && Number.isInteger(line.quantity)
+            && line.quantity > 0 && line.quantity <= item.stock_quantity
+            && (line.sku !== LARGE_SKIP_SKU || line.quantity === 1));
+        })
+        && new Set(skus).size === skus.length
+        && (!largeSkipSelected || cart.length === 1);
+      return values.first_name && values.last_name && values.email && values.phone
+        && serviceSlug !== "general" && (!fixed || cartValid);
+    }
     if (step === 2) return values.street_address && values.city && values.postcode && (fixed ? values.slot_start : values.preferred_date);
     return consent;
   }
@@ -218,7 +255,7 @@ export function BookingForm({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             service_slug: serviceSlug,
-            inventory_sku: values.sku,
+            inventory_items: cart.map(({ sku, quantity }) => ({ sku, quantity })),
             ...values,
             consent_terms: consent,
           }),
@@ -267,20 +304,40 @@ export function BookingForm({
         <label>Last name<input value={values.last_name} onChange={(e) => update("last_name", e.target.value)} placeholder="Last name" /></label>
         <label>Email<input type="email" value={values.email} onChange={(e) => update("email", e.target.value)} placeholder="Email" /></label>
         <label>Phone number<input type="tel" value={values.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+64 (02) 111 111 111" /></label>
-        {initialService === "general" && <label className="full booking-select-field">Choose a service<select value={serviceSlug} onChange={(e) => { setServiceSlug(e.target.value as ServiceSlug); setSelectedType(""); setSlots([]); setValues((current) => ({ ...current, sku: "", slot_start: "", slot_end: "" })); }}><option value="general" disabled>Select one...</option>{serviceList.map((item) => <option key={item.slug} value={item.slug}>{item.shortName}</option>)}</select></label>}
+        {initialService === "general" && <label className="full booking-select-field">Choose a service<select value={serviceSlug} onChange={(e) => { setServiceSlug(e.target.value as ServiceSlug); setCart([emptyCartLine(0)]); setNextCartId(1); setSlots([]); setValues((current) => ({ ...current, slot_start: "", slot_end: "" })); }}><option value="general" disabled>Select one...</option>{serviceList.map((item) => <option key={item.slug} value={item.slug}>{item.shortName}</option>)}</select></label>}
         {fixed && <>
-          <label className="full booking-select-field">{serviceSlug === "h2o-2-u" ? "Choose an Area" : "Choose a Type"}
-            <select value={selectedType} disabled={!types.length} onChange={(event) => { setSelectedType(event.target.value); setValues((current) => ({ ...current, sku: "", slot_start: "", slot_end: "" })); }}>
-              <option value="">Select one...</option>
-              {types.map((type) => <option key={type} value={type}>{type}</option>)}
-            </select>
-          </label>
-          <label className="full booking-select-field">{serviceSlug === "h2o-2-u" ? "Choose a Load Size" : "Choose a Size"}
-            <select value={values.sku} disabled={!selectedType} onChange={(event) => update("sku", event.target.value)}>
-              <option value="">Select one...</option>
-              {sizes.map((item) => <option key={item.sku} value={item.sku}>{inventorySize(item)} — {item.stock_quantity} available · ${(item.price_cents / 100).toFixed(0)} NZD</option>)}
-            </select>
-          </label>
+          {cart.map((line, index) => {
+            const sizes = items.filter((item) => inventoryType(item) === line.type);
+            const selectedItem = items.find((item) => item.sku === line.sku);
+            return <div className="booking-cart-line full" key={line.id}>
+              <div className="booking-cart-line-heading">
+                <strong>{index === 0 ? "First item" : `Item ${index + 1}`}</strong>
+                {cart.length > 1 && <button type="button" onClick={() => removeCartLine(line.id)}>Remove</button>}
+              </div>
+              <label className="booking-select-field">{serviceSlug === "h2o-2-u" ? "Choose an Area" : "Choose a Type"}
+                <select value={line.type} disabled={!types.length} onChange={(event) => updateCartLine(line.id, { type: event.target.value, sku: "", quantity: 1 })}>
+                  <option value="">Select one...</option>
+                  {types.map((type) => <option key={type} value={type}>{type}</option>)}
+                </select>
+              </label>
+              <label className="booking-select-field">{serviceSlug === "h2o-2-u" ? "Choose a Load Size" : "Choose a Size"}
+                <select value={line.sku} disabled={!line.type} onChange={(event) => updateCartLine(line.id, { sku: event.target.value, quantity: 1 })}>
+                  <option value="">Select one...</option>
+                  {sizes.map((item) => <option key={item.sku} value={item.sku} disabled={cart.some((other) => other.id !== line.id && other.sku === item.sku) || (item.sku === LARGE_SKIP_SKU && cart.length > 1)}>{inventorySize(item)} — {item.stock_quantity} available · ${(item.price_cents / 100).toFixed(0)} NZD</option>)}
+                </select>
+              </label>
+              {selectedItem && <label className="booking-quantity-field">Quantity
+                <select value={line.quantity} onChange={(event) => updateCartLine(line.id, { quantity: Number(event.target.value) })}>
+                  {Array.from({ length: Math.min(selectedItem.stock_quantity, selectedItem.sku === LARGE_SKIP_SKU ? 1 : 10) }, (_, quantity) => quantity + 1).map((quantity) => <option key={quantity} value={quantity}>{quantity}</option>)}
+                </select>
+              </label>}
+            </div>;
+          })}
+          <div className="booking-cart-actions full">
+            <button type="button" disabled={largeSkipSelected || cart.length >= 10 || cart.some((line) => !line.sku)} onClick={addCartLine}>+ ADD ANOTHER ITEM</button>
+            {largeSkipSelected && <span>The 4.5m³ Large Mini Skip must be booked on its own, with a quantity of one.</span>}
+            {cart.some((line) => line.sku) && <strong>Total: ${(cartTotal / 100).toFixed(2)} NZD</strong>}
+          </div>
           {!types.length && <p className="stock-empty full">{inventoryUnavailable ? "Availability could not be loaded. Please try again shortly." : "No stock is currently available for this service."}</p>}
         </>}
       </div>}
@@ -313,7 +370,10 @@ export function BookingForm({
 
       {step === 3 && <div className="booking-review">
         <div><span>Service</span><strong>{service?.shortName}</strong></div>
-        {selected && <><div><span>Option</span><strong>{selected.name}</strong></div><div><span>Price</span><strong>${(selected.price_cents / 100).toFixed(0)} NZD</strong></div></>}
+        {fixed && <>
+          <div className="booking-review-items"><span>Items</span><strong>{selectedItems.map((line) => <span key={line.id}>{line.quantity} × {line.item?.name}<br /></span>)}</strong></div>
+          <div><span>Total</span><strong>${(cartTotal / 100).toFixed(2)} NZD</strong></div>
+        </>}
         <div><span>Name</span><strong>{values.first_name} {values.last_name}</strong></div>
         <div><span>Contact</span><strong>{values.email}<br />{values.phone}</strong></div>
         <div><span>Address</span><strong>{values.street_address}{values.address_line_2 ? `, ${values.address_line_2}` : ""}<br />{values.city} {values.postcode}</strong></div>

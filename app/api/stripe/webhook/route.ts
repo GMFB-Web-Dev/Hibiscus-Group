@@ -23,10 +23,15 @@ export async function POST(request: Request) {
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
-      if (session.payment_status === "paid") await fulfillPaidCheckout(session);
-      else await extendCheckoutReservation(session);
+      if (session.payment_status === "paid") {
+        if (!await fulfillPaidCheckout(session)) throw new Error("Paid booking could not be confirmed.");
+      } else {
+        await extendCheckoutReservation(session);
+      }
     } else if (event.type === "checkout.session.async_payment_succeeded") {
-      await fulfillPaidCheckout(event.data.object as Stripe.Checkout.Session);
+      if (!await fulfillPaidCheckout(event.data.object as Stripe.Checkout.Session)) {
+        throw new Error("Paid booking could not be confirmed.");
+      }
     } else if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
       await releaseCheckoutReservation(event.data.object as Stripe.Checkout.Session, "Payment was not completed");
     }

@@ -8,10 +8,15 @@ const fixedPriceServices = new Set<string>(serviceList.filter((service) => servi
 type BookingReservation = {
   reservation_id: string;
   request_id: string;
-  item_name: string;
-  item_detail: string;
-  amount_cents: number;
+  total_amount_cents: number;
   currency: string;
+  line_items: Array<{
+    sku: string;
+    name: string;
+    detail: string;
+    unit_amount: number;
+    quantity: number;
+  }>;
 };
 
 function text(value: unknown, max: number) {
@@ -25,7 +30,11 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as Record<string, unknown>;
     const serviceSlug = text(body.service_slug, 40);
-    const sku = text(body.inventory_sku, 100);
+    const cart = Array.isArray(body.inventory_items) ? body.inventory_items : [];
+    const cartItems = cart.map((entry) => {
+      const item = entry && typeof entry === "object" ? entry as Record<string, unknown> : {};
+      return { sku: text(item.sku, 100), quantity: item.quantity };
+    });
     const firstName = text(body.first_name, 80);
     const lastName = text(body.last_name, 80);
     const email = text(body.email, 254).toLowerCase();
@@ -40,8 +49,15 @@ export async function POST(request: Request) {
     const slotEnd = new Date(text(body.slot_end, 40));
     const consentTerms = body.consent_terms === true;
 
-    if (!fixedPriceServices.has(serviceSlug) || !sku) {
+    if (!fixedPriceServices.has(serviceSlug) || cartItems.length < 1 || cartItems.length > 10
+      || cartItems.some((item) => !item.sku || typeof item.quantity !== "number"
+        || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10)
+      || new Set(cartItems.map((item) => item.sku)).size !== cartItems.length) {
       return Response.json({ error: "Choose a valid fixed-price service." }, { status: 400 });
+    }
+    if (cartItems.some((item) => item.sku === "skip-rubbish-45")
+      && (cartItems.length !== 1 || cartItems[0].quantity !== 1)) {
+      return Response.json({ error: "The 4.5m³ Large Mini Skip must be booked on its own, one at a time." }, { status: 400 });
     }
     if (!firstName || !lastName || !email.includes("@") || phone.length < 6) {
       return Response.json({ error: "Complete your contact details." }, { status: 400 });
@@ -71,8 +87,8 @@ export async function POST(request: Request) {
 
     const supabase = createAdminSupabaseClient();
     const { data, error: reservationError } = await supabase
-      .rpc("create_booking_reservation", {
-        p_sku: sku,
+      .rpc("create_booking_cart_reservation", {
+        p_items: cartItems,
         p_service_slug: serviceSlug,
         p_first_name: firstName,
         p_last_name: lastName,
@@ -94,16 +110,13 @@ export async function POST(request: Request) {
     if (reservationError || !reservation) {
       const unavailable = reservationError?.message.includes("OUT_OF_STOCK") || reservationError?.message.includes("ITEM_NOT_AVAILABLE");
       return Response.json(
-        { error: unavailable ? "That option has just sold out. Please choose another." : "We could not reserve that option." },
+        { error: unavailable ? "One of those items has just sold out. Please change your selection." : "We could not reserve those items." },
         { status: unavailable ? 409 : 500 },
       );
     }
 
     reservationId = reservation.reservation_id as string;
     const requestId = reservation.request_id as string;
-    const itemName = reservation.item_name as string;
-    const itemDetail = reservation.item_detail as string;
-    const amountCents = reservation.amount_cents as number;
     const currency = reservation.currency as string;
 
     const calBooking = await createCalBooking({
@@ -130,29 +143,27 @@ export async function POST(request: Request) {
       success_url: `${origin}/book/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/book?service=${encodeURIComponent(serviceSlug)}&cancelled=1`,
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-      line_items: [{
-        quantity: 1,
+      line_items: reservation.line_items.map((item) => ({
+        quantity: item.quantity,
         price_data: {
           currency,
-          unit_amount: amountCents,
+          unit_amount: item.unit_amount,
           product_data: {
-            name: itemName,
-            description: itemDetail,
-            metadata: { inventory_sku: sku },
+            name: item.name,
+            description: item.detail,
+            metadata: { inventory_sku: item.sku },
           },
         },
-      }],
+      })),
       metadata: {
         reservation_id: reservationId,
         request_id: requestId,
-        inventory_sku: sku,
         cal_booking_uid: calBookingUid,
       },
       payment_intent_data: {
         metadata: {
           reservation_id: reservationId,
           request_id: requestId,
-          inventory_sku: sku,
           cal_booking_uid: calBookingUid,
         },
       },
