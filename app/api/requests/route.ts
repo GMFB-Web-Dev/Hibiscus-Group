@@ -1,5 +1,6 @@
-import { createPublicSupabaseClient } from "@/lib/supabase";
+import { sendQuoteEmails } from "@/lib/email";
 import { serviceList } from "@/lib/site-data";
+import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 
 const validServices = new Set(["general", ...serviceList.map((service) => service.slug)]);
 const validKinds = new Set(["enquiry", "booking", "quote"]);
@@ -39,17 +40,41 @@ export async function POST(request: Request) {
       return Response.json({ error: "Please complete all required fields and accept the terms." }, { status: 400 });
     }
 
-    const supabase = createPublicSupabaseClient();
+    const supabase = createAdminSupabaseClient();
     if (payload.inventory_sku) {
       const { data: item } = await supabase.from("inventory_items").select("sku,service_slug,active,stock_quantity").eq("sku", payload.inventory_sku).eq("service_slug", payload.service_slug).eq("active", true).gt("stock_quantity", 0).maybeSingle();
       if (!item) return Response.json({ error: "That option is no longer available. Please choose another." }, { status: 409 });
     }
 
-    const { error } = await supabase.from("customer_requests").insert(payload);
-    if (error) {
-      console.error("Supabase request insert failed", error.code);
+    const { data: savedRequest, error } = await supabase
+      .from("customer_requests")
+      .insert(payload)
+      .select("id")
+      .single();
+    if (error || !savedRequest) {
+      console.error("Supabase request insert failed", error?.code || "missing_row");
       return Response.json({ error: "We could not send your request. Please call 022 183 1176." }, { status: 500 });
     }
+
+    if (payload.request_kind === "quote") {
+      const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://hib.gdn").replace(/\/$/, "");
+      try {
+        await sendQuoteEmails(savedRequest.id, {
+          customerName: `${payload.first_name} ${payload.last_name}`.trim(),
+          reference: savedRequest.id.slice(0, 8).toUpperCase(),
+          serviceName: serviceList.find((service) => service.slug === payload.service_slug)?.shortName || payload.service_slug,
+          email: payload.email,
+          phone: payload.phone,
+          address: [payload.street_address, payload.address_line_2, payload.city, payload.postcode].filter(Boolean).join(", ") || "Not provided",
+          preferredTime: [payload.preferred_date, payload.preferred_time].filter(Boolean).join(" · ") || "Not specified",
+          notes: payload.message,
+          adminUrl: `${siteUrl}/admin`,
+        });
+      } catch (emailError) {
+        console.error("Quote email delivery failed", emailError instanceof Error ? emailError.message : "unknown");
+      }
+    }
+
     return Response.json({ ok: true }, { status: 201 });
   } catch {
     return Response.json({ error: "Invalid request." }, { status: 400 });

@@ -61,6 +61,19 @@ Check the Cal.com event notification settings as well: its booking is created
 before payment to hold the time, so any Cal.com booking email may arrive before
 the payment is complete.
 
+## Transactional email
+
+Paid Stripe bookings send a branded confirmation to the customer and a new
+booking notification to the company. Quote requests send an acknowledgement to
+the customer and a new quote notification to the company. Resend calls use
+deterministic idempotency keys so Stripe webhook retries do not duplicate paid
+booking emails.
+
+Set `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (using an address on a domain verified
+in Resend), and `COMPANY_NOTIFICATION_EMAIL` in Vercel. The company address is
+used for booking and quote notifications and as the reply-to address on
+customer messages.
+
 ## Stock administration
 
 The protected dashboard is available at `/admin`. Stock controls and paid

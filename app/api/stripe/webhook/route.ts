@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import { extendCheckoutReservation, fulfillPaidCheckout, releaseCheckoutReservation } from "@/lib/booking";
+import { extendCheckoutReservation, fulfillPaidCheckout, releaseCheckoutReservation, sendPaidBookingEmails } from "@/lib/booking";
 import { getStripeClient } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -25,13 +25,16 @@ export async function POST(request: Request) {
       const session = event.data.object as Stripe.Checkout.Session;
       if (session.payment_status === "paid") {
         if (!await fulfillPaidCheckout(session)) throw new Error("Paid booking could not be confirmed.");
+        await sendPaidBookingEmails(session);
       } else {
         await extendCheckoutReservation(session);
       }
     } else if (event.type === "checkout.session.async_payment_succeeded") {
-      if (!await fulfillPaidCheckout(event.data.object as Stripe.Checkout.Session)) {
+      const session = event.data.object as Stripe.Checkout.Session;
+      if (!await fulfillPaidCheckout(session)) {
         throw new Error("Paid booking could not be confirmed.");
       }
+      await sendPaidBookingEmails(session);
     } else if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
       await releaseCheckoutReservation(event.data.object as Stripe.Checkout.Session, "Payment was not completed");
     }
