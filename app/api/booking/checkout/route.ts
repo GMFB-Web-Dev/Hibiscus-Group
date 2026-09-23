@@ -124,8 +124,6 @@ export async function POST(request: Request) {
 
     const calBooking = await createCalBooking({
       start: slotStart.toISOString(),
-      name: `${firstName} ${lastName}`,
-      email,
       timeZone,
     });
     calBookingUid = calBooking.uid!;

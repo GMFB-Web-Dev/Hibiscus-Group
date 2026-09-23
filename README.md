@@ -53,13 +53,12 @@ in the same Checkout session and all stock is deducted together only after
 payment succeeds.
 
 The customer sees a confirmation page and booking reference once payment and
-fulfillment are verified. The site does not currently send its own booking
-confirmation email. Enable Stripe's successful-payment receipts in the Stripe
-Dashboard if payment receipts are wanted; a separate transactional email
-integration is needed for a branded email containing the booking details.
-Check the Cal.com event notification settings as well: its booking is created
-before payment to hold the time, so any Cal.com booking email may arrive before
-the payment is complete.
+fulfillment are verified, then receives the branded Resend confirmation.
+Stripe's successful-payment receipts can also be enabled in the Stripe
+Dashboard when a separate card receipt is wanted.
+Cal.com receives `COMPANY_NOTIFICATION_EMAIL` as an internal hold attendee, not
+the customer's contact details. This keeps Cal.com responsible only for slot
+locking; customers receive the branded Resend confirmation after payment.
 
 ## Transactional email
 

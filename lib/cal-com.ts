@@ -66,13 +66,15 @@ export async function getAvailableCalSlots(input: {
 
 export async function createCalBooking(input: {
   start: string;
-  name: string;
-  email: string;
   timeZone: string;
 }) {
   const eventTypeId = Number(process.env.CAL_EVENT_TYPE_ID);
+  const holdAttendeeEmail = process.env.COMPANY_NOTIFICATION_EMAIL?.trim();
   if (!Number.isInteger(eventTypeId) || eventTypeId <= 0) {
     throw new Error("CAL_EVENT_TYPE_ID is not configured.");
+  }
+  if (!holdAttendeeEmail || !holdAttendeeEmail.includes("@")) {
+    throw new Error("COMPANY_NOTIFICATION_EMAIL is not configured.");
   }
 
   const response = await calRequest("/bookings", CAL_BOOKINGS_API_VERSION, {
@@ -81,8 +83,8 @@ export async function createCalBooking(input: {
       eventTypeId,
       start: input.start,
       attendee: {
-        name: input.name,
-        email: input.email,
+        name: "Website booking hold",
+        email: holdAttendeeEmail,
         timeZone: input.timeZone,
         language: "en",
       },
