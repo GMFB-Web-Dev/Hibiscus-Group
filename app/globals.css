@@ -13,7 +13,7 @@ button, input, select, textarea { font: inherit; }
 img { display: block; }
 h1, h2, h3, h4, p { margin-top: 0; }
 
-.site-header { height: 80px; padding: 10px 64px; display: flex; align-items: center; justify-content: space-between; background: #000; color: #fff; position: relative; z-index: 20; }
+.site-header { height: 80px; padding: 10px 64px; display: flex; align-items: center; justify-content: space-between; background: #000; color: #fff; position: sticky; top: 0; z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,.16); }
 .logo-box { width: 306px; height: 60px; display: grid; place-items: center; background: #d9d9d9; color: #111; font-weight: 500; }
 .desktop-nav { display: flex; align-items: center; gap: 32px; font-size: 16px; font-weight: 500; line-height: 1.5; }
 .desktop-nav > a:not(.button):not(.phone-button), .service-menu summary { min-height: 44px; position: relative; display: flex; align-items: center; }
