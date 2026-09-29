@@ -3,8 +3,16 @@ import { ArrowIcon } from "@/components/site-chrome";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { fulfillPaidCheckout } from "@/lib/booking";
 import { getStripeClient } from "@/lib/stripe";
+import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = createPageMetadata({
+  title: "Booking Confirmation",
+  description: "Hibiscus Group booking confirmation.",
+  path: "/book",
+  noIndex: true,
+});
 
 export default async function BookingSuccessPage({
   searchParams,

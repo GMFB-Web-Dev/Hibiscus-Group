@@ -39,12 +39,19 @@ function ActiveLink({
   );
 }
 
-export function Logo() {
+export function Logo({ indicateHome = false }: { indicateHome?: boolean }) {
+  const pathname = usePathname();
+  const active = indicateHome && pathname === "/";
+
   return (
-    <ActiveLink href="/" className="logo-box">
+    <Link
+      href="/"
+      className={`logo-box${active ? " is-active" : ""}`}
+      aria-current={active ? "page" : undefined}
+    >
       <span className="visually-hidden">Hibiscus Group home</span>
       <span aria-hidden>LOGO</span>
-    </ActiveLink>
+    </Link>
   );
 }
 
@@ -75,7 +82,7 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
-      <Logo />
+      <Logo indicateHome />
       <nav className="desktop-nav" aria-label="Main navigation">
         <ActiveLink href="/about">ABOUT</ActiveLink>
         <div className={`service-menu${servicesActive ? " is-active" : ""}`}>

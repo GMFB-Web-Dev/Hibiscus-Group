@@ -1,6 +1,14 @@
 import Image from "next/image";
 import { AreasSection, ArrowIcon, Hero, SectionHeading, SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { createPageMetadata } from "@/lib/seo";
 import { serviceList } from "@/lib/site-data";
+
+export const metadata = createPageMetadata({
+  title: "Property & Delivery Services",
+  description: "Explore mini skip hire, bulk water delivery, water blasting, arborist work, and digger and truck hire across North Auckland.",
+  path: "/services",
+  keywords: ["North Auckland services", "skip hire", "water delivery", "property maintenance"],
+});
 
 const servicesCopy = {
   "skip-2-u": "SKIP 2 U offers mini skip bins designed for smaller jobs, tight access areas and practical waste removal. With 2m³, 3m³ and 4.5m³ skip options, customers can choose the size they need, pay upfront online, and have the bin delivered straight to their property.",

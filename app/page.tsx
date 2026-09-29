@@ -2,7 +2,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { AreasSection, ArrowIcon, BoxIcon, Hero, SectionHeading, SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { TestimonialsCarousel } from "@/components/testimonials-carousel";
+import { createPageMetadata, DEFAULT_DESCRIPTION } from "@/lib/seo";
 import { serviceList } from "@/lib/site-data";
+
+export const metadata = createPageMetadata({
+  title: "Hibiscus Group | Local Services Delivered 2 U",
+  description: DEFAULT_DESCRIPTION,
+  path: "/",
+  keywords: [
+    "North Auckland property services",
+    "mini skip hire",
+    "bulk water delivery",
+    "water blasting",
+    "arborist services",
+  ],
+});
 
 const cardImages = ["/images/figma/home-8.png", "/images/figma/services-7.png", "/images/figma/services-9.png", "/images/figma/home-7.png", "/images/figma/home-10.png"];
 const cardAccents = ["#e52169", "#3989d3", "#f36f07", "#2d8a32", "#f8c919"];

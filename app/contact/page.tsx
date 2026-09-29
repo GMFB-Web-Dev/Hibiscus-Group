@@ -1,6 +1,14 @@
 import Image from "next/image";
 import { ContactForm } from "@/components/forms";
 import { Hero, SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Contact Us",
+  description: "Contact Hibiscus Group for skip hire, water delivery, water blasting, arborist work, or digger and truck hire in North Auckland.",
+  path: "/contact",
+  keywords: ["contact Hibiscus Group", "North Auckland service quote", "Dairy Flat services"],
+});
 
 export default function ContactPage() {
   return <>

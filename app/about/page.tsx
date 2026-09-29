@@ -2,6 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { ContactForm } from "@/components/forms";
 import { ArrowIcon, BoxIcon, Hero, SectionHeading, SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "About Our Local Family Team",
+  description: "Meet the family-operated Hibiscus Group team delivering practical property and maintenance services across North Auckland.",
+  path: "/about",
+  keywords: ["Hibiscus Group", "family-operated Auckland business", "North Auckland services"],
+});
 
 const values = [
   ["GOING THE EXTRA MILE", "We put in the extra effort to make sure customers are properly looked after and the job is done right."],
