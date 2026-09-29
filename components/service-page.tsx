@@ -53,7 +53,7 @@ export function ServicePage({ service }: { service: Service }) {
   const bookHref = `/book?service=${service.slug}`;
   return <>
     <SiteHeader />
-    <main style={{ "--accent": service.accent } as React.CSSProperties}>
+    <main className="service-page" style={{ "--accent": service.accent } as React.CSSProperties}>
       <Hero image={service.hero} title={service.heroTitle} copy={service.heroCopy} accent={service.accent} titleAccent={false} primaryLabel="SERVICES" primaryHref="/services" secondaryLabel="CONTACT US" secondaryHref="/contact" />
 
       <section className="service-intro split-section accent-wash">

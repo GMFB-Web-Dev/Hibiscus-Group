@@ -360,6 +360,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .service-card-image { height: 240px; }
   .services-list .service-row-copy .button-accent { border-color: #080808; background: #080808; color: #fff; }
   .services-list .service-row-copy .button-accent:hover, .services-list .service-row-copy .button-accent:focus-visible { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .service-page .section-heading .eyebrow { color: #080808; }
+  .service-page .split-section .button-accent { border-color: #080808; background: #080808; color: #fff; }
+  .service-page .split-section .button-accent:hover, .service-page .split-section .button-accent:focus-visible { border-color: var(--accent); background: var(--accent); color: #fff; }
   .how-section .section-heading h2 { font-size: 36px; }
   .how-heading > p { font-size: 16px; }
   .steps { height: auto; grid-template-columns: 1fr; gap: 32px; }
