@@ -52,7 +52,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const servicesActive = isCurrentRoute(pathname, "/services");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(servicesActive);
+  const [servicesOpen, setServicesOpen] = useState(false);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -78,8 +78,8 @@ export function SiteHeader() {
       <Logo />
       <nav className="desktop-nav" aria-label="Main navigation">
         <ActiveLink href="/about">ABOUT</ActiveLink>
-        <details className={`service-menu${servicesActive ? " is-active" : ""}`}>
-          <summary>
+        <div className={`service-menu${servicesActive ? " is-active" : ""}`}>
+          <ActiveLink className="service-menu-trigger" href="/services">
             <span>SERVICES</span>
             <Image
               className="service-chevron"
@@ -88,7 +88,7 @@ export function SiteHeader() {
               width={22}
               height={22}
             />
-          </summary>
+          </ActiveLink>
           <div className="service-menu-panel">
             <ActiveLink href="/services" exact>ALL SERVICES</ActiveLink>
             {serviceList.map((service) => (
@@ -97,7 +97,7 @@ export function SiteHeader() {
               </ActiveLink>
             ))}
           </div>
-        </details>
+        </div>
         <ActiveLink href="/contact">CONTACT</ActiveLink>
         <a className="phone-button" href="tel:+64221831176">022 183 1176</a>
         <ActiveLink className="button button-pink" href="/book">BOOK A SERVICE</ActiveLink>
@@ -111,14 +111,11 @@ export function SiteHeader() {
         aria-controls="mobile-navigation"
         onClick={() => setMenuOpen((open) => !open)}
       >
-        <Image
-          className="mobile-menu-icon"
-          src={menuOpen ? "/images/figma/icons/close.svg" : "/images/figma/icons/menu.svg"}
-          alt=""
-          width={52}
-          height={52}
-          aria-hidden
-        />
+        <span className="mobile-menu-lines" aria-hidden>
+          <i />
+          <i />
+          <i />
+        </span>
       </button>
 
       <button
@@ -146,7 +143,11 @@ export function SiteHeader() {
             <span>SERVICES</span>
             <Image src="/images/figma/nav-chevron-down.svg" alt="" width={20} height={20} aria-hidden />
           </button>
-          <div id="mobile-services-list" className={`mobile-services-list${servicesOpen ? " is-open" : ""}`}>
+          <div
+            id="mobile-services-list"
+            className={`mobile-services-list${servicesOpen ? " is-open" : ""}`}
+            aria-hidden={!servicesOpen}
+          >
             <div>
               <ActiveLink href="/services" exact onClick={closeMenu}>ALL SERVICES</ActiveLink>
               {serviceList.map((service) => (

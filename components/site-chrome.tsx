@@ -100,14 +100,17 @@ export function CheckIcon({ variant = "skip-2-u" }: { variant?: "skip-2-u" | "h2
 
 export function ArrowIcon() {
   return (
-    <Image
+    <svg
       className="arrow-icon"
-      src="/images/figma/icons/arrow.svg"
-      alt=""
       width={22}
       height={22}
+      viewBox="0 0 22 22"
+      fill="none"
       aria-hidden
-    />
+    >
+      <path d="M5 11H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M11 5L17 11L11 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
