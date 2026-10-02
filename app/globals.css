@@ -160,13 +160,13 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .areas-copy .section-heading .eyebrow { display: none; }
 
 .site-footer { min-height: 174px; padding: 28px 52px; display: flex; align-items: center; gap: 190px; background: #000; color: #fff; }
-.footer-content { flex: 1; }
+.footer-content { position: relative; flex: 0 0 auto; }
 .site-footer nav { display: flex; gap: 38px; font-size: 13px; }
 .site-footer nav a { position: relative; transition: color .18s ease; }
 .site-footer nav a::after { content: ""; position: absolute; right: 0; bottom: -5px; left: 0; height: 2px; border-radius: 99px; background: var(--pink); transform: scaleX(0); transition: transform .18s ease; }
 .site-footer nav a:hover, .site-footer nav a:focus-visible, .site-footer nav a.is-active { color: var(--pink); outline: none; }
 .site-footer nav a:hover::after, .site-footer nav a:focus-visible::after, .site-footer nav a.is-active::after { transform: scaleX(1); }
-.site-footer p { margin: 24px 0 0; color: #667085; font-size: 12px; text-align: center; }
+.site-footer p { margin: 24px 0 0; position: absolute; top: 100%; right: 0; left: 0; color: #667085; font-size: 12px; text-align: center; }
 
 .services-list { background: #fff; }
 .service-row { min-height: 706px; padding: 32px 64px; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 100%, white) 0%, color-mix(in srgb, var(--accent) 25%, white) 40%, #fff 56%); }
@@ -387,7 +387,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .footer-content { width: 100%; }
   .site-footer nav { width: 100%; display: grid; grid-template-columns: repeat(5, auto); justify-content: space-between; gap: 4px; font-size: clamp(8px, 2.45vw, 11px); white-space: nowrap; }
   .site-footer nav a::after { bottom: -4px; }
-  .site-footer p { margin-top: 24px; font-size: 10px; }
+  .site-footer p { margin-top: 24px; position: static; font-size: 10px; }
   .contact-cards > div, .contact-form { grid-template-columns: 1fr; }
   .contact-form .full { grid-column: auto; }
   .contact-page .hero { min-height: 570px; padding: 120px 0 80px; }
