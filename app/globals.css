@@ -181,8 +181,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .service-intro { min-height: 706px; background: linear-gradient(90deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 15%, white) 51%, #fff 60%); }
 .service-help.accent-edge { min-height: 706px; background: linear-gradient(270deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 12%, white) 51%, #fff 59%); }
 .service-page .section-heading .eyebrow { color: #080808; }
-.service-page .split-section .button-accent { border-color: #080808; background: #080808; color: #fff; }
-.service-page .split-section .button-accent:hover, .service-page .split-section .button-accent:focus-visible { border-color: var(--accent); background: var(--accent); color: #fff; }
 .why-service { min-height: 500px; background: #f2f2f2; }
 .check-list { list-style: none; padding: 0 !important; }
 .check-list li { margin: 16px 0; display: flex; align-items: center; gap: 16px; }
@@ -345,10 +343,14 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .mobile-services-list > div { min-height: 0; overflow: hidden; }
   .mobile-services-list a { min-height: 42px; padding: 9px 18px 9px 30px; display: flex; align-items: center; border-bottom: 1px solid #292929; color: #ddd; font-size: 14px; transition: background-color .18s ease, color .18s ease; }
   .mobile-services-list a:hover, .mobile-services-list a:focus-visible, .mobile-services-list a.is-active { background: var(--pink); color: #fff; outline: none; }
-  .mobile-navigation .mobile-book-link { min-height: 48px; margin-top: 22px; justify-content: center; border: 1px solid var(--pink); border-radius: 8px; background: transparent; color: #fff; text-align: center; transition: background-color .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
+  .mobile-navigation .mobile-book-link { min-height: 48px; margin-top: 22px; justify-content: center; border: 1px solid #fff; border-radius: 8px; background: #080808; color: #fff; text-align: center; transition: background-color .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
   .mobile-navigation .mobile-book-link:hover, .mobile-navigation .mobile-book-link:focus-visible, .mobile-navigation .mobile-book-link.is-active { padding-left: 14px; border-color: var(--pink); background: var(--pink); color: #fff; box-shadow: 0 8px 22px rgba(229,33,105,.3); transform: translateY(-2px) scale(1.01); }
-  .mobile-navigation .mobile-phone-link { min-height: 48px; margin-top: 12px; justify-content: center; border: 1px solid var(--pink); border-radius: 8px; color: var(--pink); text-align: center; }
-  .mobile-navigation .mobile-phone-link:hover, .mobile-navigation .mobile-phone-link:focus-visible { background: rgba(229,33,105,.12); color: #fff; outline: none; }
+  .mobile-navigation .mobile-phone-link { min-height: 48px; margin-top: 12px; justify-content: center; border: 1px solid #fff; border-radius: 8px; background: #080808; color: #fff; text-align: center; }
+  .mobile-navigation .mobile-phone-link:hover, .mobile-navigation .mobile-phone-link:focus-visible { border-color: var(--pink); background: var(--pink); color: #fff; outline: none; }
+  .button.button-pink, .button.button-accent, .button.button-outline, .button.button-outline-dark { border-color: #080808; background: #080808; color: #fff; }
+  .button.button-pink:hover, .button.button-pink:focus-visible, .button.button-accent:hover, .button.button-accent:focus-visible, .button.button-outline:hover, .button.button-outline:focus-visible { border-color: var(--accent, var(--pink)); background: var(--accent, var(--pink)); color: #fff; }
+  .button.button-outline-dark:hover, .button.button-outline-dark:focus-visible { border-color: #080808; background: #fff; color: #080808; }
+  .hero .button, .how-section > .button, .mission-section .button { border-color: #fff; }
   .container-wide { width: calc(100% - 40px); }
   .hero, .hero.hero-large { min-height: 570px; }
   .hero h1 { font-size: 38px; }
@@ -361,8 +363,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .service-card-grid { grid-template-columns: 1fr; }
   .service-card { min-height: 430px; }
   .service-card-image { height: 240px; }
-  .services-list .service-row-copy .button-accent { border-color: #080808; background: #080808; color: #fff; }
-  .services-list .service-row-copy .button-accent:hover, .services-list .service-row-copy .button-accent:focus-visible { border-color: var(--accent); background: var(--accent); color: #fff; }
   .how-section .section-heading h2 { font-size: 36px; }
   .how-heading > p { font-size: 16px; }
   .steps { height: auto; grid-template-columns: 1fr; gap: 32px; }
