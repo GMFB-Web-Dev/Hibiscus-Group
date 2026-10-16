@@ -1,4 +1,8 @@
-import { cancelCalBooking, createCalBooking, getAvailableCalSlots } from "@/lib/cal-com";
+import {
+  BOOKING_TIME_ZONE,
+  getAvailableBookingSlots,
+  releaseExpiredBookingHolds,
+} from "@/lib/booking-slots";
 import { serviceList } from "@/lib/site-data";
 import { getStripeClient } from "@/lib/stripe";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
@@ -25,7 +29,6 @@ function text(value: unknown, max: number) {
 
 export async function POST(request: Request) {
   let reservationId = "";
-  let calBookingUid = "";
 
   try {
     const body = await request.json() as Record<string, unknown>;
@@ -44,7 +47,7 @@ export async function POST(request: Request) {
     const city = text(body.city, 120);
     const postcode = text(body.postcode, 20);
     const message = text(body.message, 5000);
-    const timeZone = text(body.time_zone, 100) || "Pacific/Auckland";
+    const timeZone = text(body.time_zone, 100) || BOOKING_TIME_ZONE;
     const slotStart = new Date(text(body.slot_start, 40));
     const slotEnd = new Date(text(body.slot_end, 40));
     const consentTerms = body.consent_terms === true;
@@ -74,15 +77,18 @@ export async function POST(request: Request) {
     if (!Number.isFinite(slotStart.getTime()) || !Number.isFinite(slotEnd.getTime()) || slotStart <= new Date() || slotEnd <= slotStart) {
       return Response.json({ error: "Choose an available booking time." }, { status: 400 });
     }
+    if (timeZone !== BOOKING_TIME_ZONE) {
+      return Response.json({ error: "Booking times use Pacific/Auckland." }, { status: 400 });
+    }
 
-    const availableSlots = await getAvailableCalSlots({
+    await releaseExpiredBookingHolds();
+    const availableSlots = await getAvailableBookingSlots({
       start: new Date(Math.max(Date.now(), slotStart.getTime() - 60 * 60 * 1000)).toISOString(),
       end: new Date(slotStart.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-      timeZone,
     });
-    const selectedSlotIsAvailable = availableSlots.some((slot) => (
+    const selectedSlotIsAvailable = availableSlots.some((slot) =>
       new Date(slot.start).getTime() === slotStart.getTime()
-    ));
+      && new Date(slot.end).getTime() === slotEnd.getTime());
 
     if (!selectedSlotIsAvailable) {
       return Response.json({ error: "That time was just taken. Please choose another booking time." }, { status: 409 });
@@ -105,34 +111,28 @@ export async function POST(request: Request) {
         p_cal_end_at: slotEnd.toISOString(),
         p_cal_time_zone: timeZone,
         p_message: message || null,
-        p_details: { source: "website", cal_event_type_id: process.env.CAL_EVENT_TYPE_ID },
+        p_details: { source: "website", slot_provider: "supabase" },
       })
       .single();
     const reservation = data as BookingReservation | null;
 
     if (reservationError || !reservation) {
       const unavailable = reservationError?.message.includes("OUT_OF_STOCK") || reservationError?.message.includes("ITEM_NOT_AVAILABLE");
+      const slotUnavailable = reservationError?.code === "23505"
+        && reservationError.message.includes("customer_requests_active_booking_slot_key");
       return Response.json(
-        { error: unavailable ? "One of those items has just sold out. Please change your selection." : "We could not reserve those items." },
-        { status: unavailable ? 409 : 500 },
+        { error: slotUnavailable
+          ? "That time was just taken. Please choose another booking time."
+          : unavailable
+            ? "One of those items has just sold out. Please change your selection."
+            : "We could not reserve those items." },
+        { status: unavailable || slotUnavailable ? 409 : 500 },
       );
     }
 
     reservationId = reservation.reservation_id as string;
     const requestId = reservation.request_id as string;
     const currency = reservation.currency as string;
-
-    const calBooking = await createCalBooking({
-      start: slotStart.toISOString(),
-      timeZone,
-    });
-    calBookingUid = calBooking.uid!;
-
-    const { data: calAttached, error: calAttachError } = await supabase.rpc("attach_cal_booking_to_reservation", {
-      p_reservation_id: reservationId,
-      p_cal_booking_uid: calBookingUid,
-    });
-    if (calAttachError || calAttached !== true) throw new Error("Unable to save booking.");
 
     const origin = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
     const stripe = getStripeClient();
@@ -159,13 +159,11 @@ export async function POST(request: Request) {
       metadata: {
         reservation_id: reservationId,
         request_id: requestId,
-        cal_booking_uid: calBookingUid,
       },
       payment_intent_data: {
         metadata: {
           reservation_id: reservationId,
           request_id: requestId,
-          cal_booking_uid: calBookingUid,
         },
       },
     });
@@ -182,9 +180,6 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Booking checkout creation failed", error instanceof Error ? error.message : "unknown");
 
-    if (calBookingUid) {
-      await cancelCalBooking(calBookingUid, "Payment checkout could not be started");
-    }
     if (reservationId) {
       const supabase = createAdminSupabaseClient();
       await supabase.rpc("release_inventory_reservation", { p_reservation_id: reservationId });

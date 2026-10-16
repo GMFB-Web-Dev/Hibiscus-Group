@@ -52,7 +52,7 @@ type AdminBooking = {
 };
 
 type ViewState = "checking" | "signed-out" | "loading" | "ready" | "denied";
-type AdminTab = "stock" | "bookings";
+type AdminTab = "stock" | "bookings" | "deliveries";
 
 const serviceNames: Record<string, string> = {
   "skip-2-u": "SKIP 2 U",
@@ -94,13 +94,24 @@ export default function AdminDashboard() {
   const [bookingsHasMore, setBookingsHasMore] = useState(false);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState("");
+  const [bookingSearch, setBookingSearch] = useState("");
+  const [activeBookingSearch, setActiveBookingSearch] = useState("");
+  const [deliveringId, setDeliveringId] = useState("");
 
-  const loadBookings = useCallback(async (activeSession: Session, page: number) => {
+  const loadBookings = useCallback(async (
+    activeSession: Session,
+    page: number,
+    tab: "bookings" | "deliveries",
+    search = "",
+  ) => {
     setBookingsLoading(true);
     setBookingsError("");
 
     try {
-      const response = await fetch(`/api/admin/bookings?page=${page}`, {
+      const params = new URLSearchParams({ page: String(page) });
+      if (tab === "deliveries") params.set("view", "deliveries");
+      if (tab === "bookings" && search) params.set("q", search);
+      const response = await fetch(`/api/admin/bookings?${params}`, {
         headers: { Authorization: `Bearer ${activeSession.access_token}` },
         cache: "no-store",
       });
@@ -198,6 +209,8 @@ export default function AdminDashboard() {
     setItems([]);
     setBookings([]);
     setActiveTab("stock");
+    setBookingSearch("");
+    setActiveBookingSearch("");
     setMessage("");
     setView("signed-out");
   }
@@ -236,7 +249,42 @@ export default function AdminDashboard() {
 
   function selectTab(tab: AdminTab) {
     setActiveTab(tab);
-    if (tab === "bookings" && session) void loadBookings(session, 0);
+    if (tab !== "stock" && session) {
+      void loadBookings(session, 0, tab, tab === "bookings" ? activeBookingSearch : "");
+    }
+  }
+
+  function searchBookings(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session) return;
+    const search = bookingSearch.trim();
+    setActiveBookingSearch(search);
+    void loadBookings(session, 0, "bookings", search);
+  }
+
+  async function markDelivered(booking: AdminBooking) {
+    if (!session) return;
+    setDeliveringId(booking.id);
+    setBookingsError("");
+
+    try {
+      await readJson(await fetch("/api/admin/bookings", {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: booking.id }),
+      }));
+      const nextPage = bookings.length === 1 && bookingsPage > 0
+        ? bookingsPage - 1
+        : bookingsPage;
+      await loadBookings(session, nextPage, "deliveries");
+    } catch (error) {
+      setBookingsError(error instanceof Error ? error.message : "The delivery could not be updated.");
+    } finally {
+      setDeliveringId("");
+    }
   }
 
   const groups = useMemo(() => {
@@ -322,21 +370,24 @@ export default function AdminDashboard() {
         <div className="admin-title-row">
           <div>
             <p className="admin-eyebrow">BOOKING MANAGEMENT</p>
-            <h1>{activeTab === "stock" ? "Stock control" : "Paid bookings"}</h1>
+            <h1>{activeTab === "stock" ? "Stock control" : activeTab === "bookings" ? "Paid bookings" : "Deliveries"}</h1>
             <span className="admin-heading-line" aria-hidden="true" />
           </div>
           <button
             className="admin-refresh"
             type="button"
-            onClick={() => session && (activeTab === "stock" ? void loadInventory(session) : void loadBookings(session, bookingsPage))}
+            onClick={() => session && (activeTab === "stock"
+              ? void loadInventory(session)
+              : void loadBookings(session, bookingsPage, activeTab, activeTab === "bookings" ? activeBookingSearch : ""))}
           >
-            {activeTab === "stock" ? "Refresh stock" : "Refresh bookings"}
+            {activeTab === "stock" ? "Refresh stock" : activeTab === "bookings" ? "Refresh bookings" : "Refresh deliveries"}
           </button>
         </div>
 
         <div className="admin-tabs" role="tablist" aria-label="Admin sections">
           <button id="admin-stock-tab" type="button" role="tab" aria-controls="admin-stock-panel" aria-selected={activeTab === "stock"} onClick={() => selectTab("stock")}>Stock control</button>
           <button id="admin-bookings-tab" type="button" role="tab" aria-controls="admin-bookings-panel" aria-selected={activeTab === "bookings"} onClick={() => selectTab("bookings")}>Paid bookings</button>
+          <button id="admin-deliveries-tab" type="button" role="tab" aria-controls="admin-deliveries-panel" aria-selected={activeTab === "deliveries"} onClick={() => selectTab("deliveries")}>Needs delivery</button>
         </div>
 
         {activeTab === "stock" && <div id="admin-stock-panel" role="tabpanel" aria-labelledby="admin-stock-tab">
@@ -440,6 +491,27 @@ export default function AdminDashboard() {
             <p>Only paid bookings appear here. Pending, cancelled and failed payments are excluded.</p>
           </div>
 
+          <form className="admin-booking-search" role="search" onSubmit={searchBookings}>
+            <label htmlFor="admin-booking-search">Search paid bookings</label>
+            <div>
+              <input
+                id="admin-booking-search"
+                type="search"
+                value={bookingSearch}
+                onChange={(event) => setBookingSearch(event.target.value)}
+                placeholder="Name, email, phone, address or reference"
+                maxLength={100}
+              />
+              <button type="submit" disabled={bookingsLoading}>Search</button>
+              {activeBookingSearch ? <button type="button" onClick={() => {
+                if (!session) return;
+                setBookingSearch("");
+                setActiveBookingSearch("");
+                void loadBookings(session, 0, "bookings");
+              }}>Clear</button> : null}
+            </div>
+          </form>
+
           {bookingsError ? <p className="admin-alert error" role="alert">{bookingsError}</p> : null}
           {bookingsLoading ? <p>Loading bookings…</p> : null}
           {!bookingsLoading && !bookings.length ? <p>No paid bookings on this page yet.</p> : null}
@@ -488,8 +560,71 @@ export default function AdminDashboard() {
           <div className="admin-booking-pagination">
             <span>{bookingsTotal} paid bookings · Page {bookingsPage + 1}</span>
             <div>
-              <button type="button" disabled={bookingsLoading || bookingsPage === 0} onClick={() => session && void loadBookings(session, bookingsPage - 1)}>Previous</button>
-              <button type="button" disabled={bookingsLoading || !bookingsHasMore} onClick={() => session && void loadBookings(session, bookingsPage + 1)}>Next</button>
+              <button type="button" disabled={bookingsLoading || bookingsPage === 0} onClick={() => session && void loadBookings(session, bookingsPage - 1, "bookings", activeBookingSearch)}>Previous</button>
+              <button type="button" disabled={bookingsLoading || !bookingsHasMore} onClick={() => session && void loadBookings(session, bookingsPage + 1, "bookings", activeBookingSearch)}>Next</button>
+            </div>
+          </div>
+        </section>}
+
+        {activeTab === "deliveries" && <section className="admin-bookings" id="admin-deliveries-panel" role="tabpanel" aria-labelledby="admin-deliveries-tab">
+          <div className="admin-bookings-heading">
+            <div>
+              <p className="admin-eyebrow">FULFILMENT QUEUE</p>
+              <h2>Orders needing delivery</h2>
+            </div>
+            <p>Paid skip and water orders remain here until a staff member marks the delivery complete.</p>
+          </div>
+
+          {bookingsError ? <p className="admin-alert error" role="alert">{bookingsError}</p> : null}
+          {bookingsLoading ? <p>Loading deliveries…</p> : null}
+          {!bookingsLoading && !bookings.length ? <p>No paid orders are awaiting delivery.</p> : null}
+
+          <div className="admin-booking-list">
+            {bookings.map((booking) => {
+              const service = serviceNames[booking.service_slug] ?? booking.service_slug;
+              const bookedTime = booking.cal_start_at
+                ? new Intl.DateTimeFormat("en-NZ", {
+                  timeZone: booking.cal_time_zone || "Pacific/Auckland",
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }).format(new Date(booking.cal_start_at))
+                : "Not selected";
+              const total = booking.items.reduce((amount, item) =>
+                amount + (item.amount_cents ?? 0) * item.quantity, 0);
+
+              return <article className="admin-booking-card" key={booking.id}>
+                <div className="admin-booking-main">
+                  <div>
+                    <p className="admin-booking-kind">Delivery · {service}</p>
+                    <h3>{booking.first_name} {booking.last_name}</h3>
+                    <p>{bookedTime}</p>
+                    <p>Reference: {booking.id.slice(0, 8).toUpperCase()}</p>
+                  </div>
+                  <button
+                    className="admin-delivered-button"
+                    type="button"
+                    disabled={deliveringId === booking.id}
+                    onClick={() => void markDelivered(booking)}
+                  >
+                    {deliveringId === booking.id ? "Updating…" : "Mark delivered"}
+                  </button>
+                </div>
+                <div className="admin-booking-details">
+                  <div><span>Items</span><strong>{booking.items.map((item) => `${item.quantity} × ${items.find((stock) => stock.sku === item.sku)?.name ?? item.sku}`).join(", ") || "No items recorded"}</strong></div>
+                  <div><span>Total</span><strong>{booking.items.length ? `$${(total / 100).toFixed(2)} NZD` : "—"}</strong></div>
+                  <div><span>Contact</span><strong><a href={`mailto:${booking.email}`}>{booking.email}</a><br /><a href={`tel:${booking.phone}`}>{booking.phone}</a></strong></div>
+                  <div><span>Address</span><strong>{[booking.street_address, booking.address_line_2, booking.city, booking.postcode].filter(Boolean).join(", ") || "Not provided"}</strong></div>
+                  {booking.message ? <div className="admin-booking-notes"><span>Notes</span><strong>{booking.message}</strong></div> : null}
+                </div>
+              </article>;
+            })}
+          </div>
+
+          <div className="admin-booking-pagination">
+            <span>{bookingsTotal} orders awaiting delivery · Page {bookingsPage + 1}</span>
+            <div>
+              <button type="button" disabled={bookingsLoading || bookingsPage === 0} onClick={() => session && void loadBookings(session, bookingsPage - 1, "deliveries")}>Previous</button>
+              <button type="button" disabled={bookingsLoading || !bookingsHasMore} onClick={() => session && void loadBookings(session, bookingsPage + 1, "deliveries")}>Next</button>
             </div>
           </div>
         </section>}

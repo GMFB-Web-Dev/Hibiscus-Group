@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       }
       await sendPaidBookingEmails(session);
     } else if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
-      await releaseCheckoutReservation(event.data.object as Stripe.Checkout.Session, "Payment was not completed");
+      await releaseCheckoutReservation(event.data.object as Stripe.Checkout.Session);
     }
 
     return Response.json({ received: true });

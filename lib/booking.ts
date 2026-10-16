@@ -1,7 +1,6 @@
 import "server-only";
 
 import type Stripe from "stripe";
-import { cancelCalBooking } from "@/lib/cal-com";
 import { sendBookingEmails } from "@/lib/email";
 import { serviceList } from "@/lib/site-data";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
@@ -9,7 +8,6 @@ import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 type ReservationRecord = {
   id: string;
   status: "pending" | "completed" | "released";
-  cal_booking_uid: string | null;
   stripe_checkout_session_id: string | null;
   amount_cents: number | null;
   currency: string;
@@ -149,27 +147,20 @@ export async function extendCheckoutReservation(session: Stripe.Checkout.Session
   return data === true;
 }
 
-export async function releaseCheckoutReservation(
-  session: Stripe.Checkout.Session,
-  reason: string,
-) {
+export async function releaseCheckoutReservation(session: Stripe.Checkout.Session) {
   const reservationId = session.metadata?.reservation_id;
   if (!reservationId) return false;
 
   const supabase = createAdminSupabaseClient();
   const { data: reservation, error: readError } = await supabase
     .from("stock_reservations")
-    .select("id,status,cal_booking_uid,stripe_checkout_session_id,amount_cents,currency")
+    .select("id,status,stripe_checkout_session_id,amount_cents,currency")
     .eq("id", reservationId)
     .maybeSingle<ReservationRecord>();
 
   if (readError || !reservation) return false;
   if (reservation.status !== "pending") return reservation.status === "released";
   if (reservation.stripe_checkout_session_id !== session.id) return false;
-
-  if (reservation.cal_booking_uid) {
-    await cancelCalBooking(reservation.cal_booking_uid, reason);
-  }
 
   const { data, error } = await supabase.rpc("release_inventory_reservation", {
     p_reservation_id: reservationId,

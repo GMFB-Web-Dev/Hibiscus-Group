@@ -1,6 +1,6 @@
 Hibiscus Group website and booking workflow. Fixed-price services use live
-Supabase inventory, Cal.com availability, Stripe-hosted Checkout, and a signed
-Stripe webhook that fulfills stock exactly once after payment.
+Supabase inventory and booking availability, Stripe-hosted Checkout, and a
+signed Stripe webhook that fulfills stock exactly once after payment.
 
 ## Getting Started
 
@@ -20,8 +20,8 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Booking integration
 
-Copy `.env.example` to `.env.local` and configure the server-only Supabase,
-Stripe sandbox, and Cal.com values. Do not expose secret keys with a
+Copy `.env.example` to `.env.local` and configure the server-only Supabase and
+Stripe sandbox values. Do not expose secret keys with a
 `NEXT_PUBLIC_` prefix.
 
 The Stripe webhook endpoint is:
@@ -41,11 +41,11 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 ```
 
 Apply the SQL in `supabase/migrations` before using the booking page. The
-checkout route validates the selected Cal.com slot again, creates a temporary
-inventory reservation, books the Cal.com event, and redirects to Stripe.
+checkout route validates the selected Supabase slot again, creates a temporary
+inventory and time-slot reservation, and redirects to Stripe.
 Pending reservations reduce the stock shown on page one without changing the
 stored stock quantity. Paid checkout fulfillment decrements stock atomically;
-expired or failed checkout cancels the Cal.com booking and releases the hold.
+expired or failed checkout releases both the inventory and time-slot hold.
 Customers can book at most two units for one booking time, either as two
 different options or quantity two of one option. The 4.5m³ Large Mini Skip is
 limited to one and cannot be combined with another item. Each item is charged
@@ -56,9 +56,9 @@ The customer sees a confirmation page and booking reference once payment and
 fulfillment are verified, then receives the branded Resend confirmation.
 Stripe's successful-payment receipts can also be enabled in the Stripe
 Dashboard when a separate card receipt is wanted.
-Cal.com receives `COMPANY_NOTIFICATION_EMAIL` as an internal hold attendee, not
-the customer's contact details. This keeps Cal.com responsible only for slot
-locking; customers receive the branded Resend confirmation after payment.
+Supabase stores the recurring Auckland availability schedule and prevents two
+active bookings from claiming the same time. Customers receive the branded
+Resend confirmation after payment.
 
 ## Transactional email
 
@@ -75,10 +75,12 @@ and quote notifications and as the reply-to address on customer messages.
 
 ## Stock administration
 
-The protected dashboard is available at `/admin`. Stock controls and paid
-bookings are in separate tabs. The bookings tab shows selected items, booking
-time, customer contact and address; pending, cancelled and failed payments,
-quotes and enquiries are excluded. Admins sign in with
+The protected dashboard is available at `/admin`. Stock controls, paid
+bookings, and orders awaiting delivery are in separate tabs. Paid bookings can
+be searched by customer, contact details, address, service, or reference. The
+delivery queue contains confirmed, paid skip and water orders until staff mark
+them delivered. Pending, cancelled and failed payments, quotes and enquiries
+are excluded. Admins sign in with
 Supabase Auth email and password credentials. There is deliberately no public
 sign-up route: create or invite the user from the Hibiscus Group project under
 Supabase **Authentication → Users**, then grant that user access with their Auth

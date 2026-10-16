@@ -21,12 +21,11 @@ type BookingRow = {
   preferred_time: string | null;
   cal_start_at: string | null;
   cal_time_zone: string | null;
-  cal_booking_uid: string | null;
-  stripe_checkout_session_id: string | null;
   payment_status: string;
   status: string;
   message: string | null;
   created_at: string;
+  total_count: number;
 };
 
 type ReservationRow = {
@@ -39,25 +38,27 @@ type ReservationRow = {
 export async function GET(request: Request) {
   try {
     const { supabase } = await requireAdmin(request);
-    const rawPage = new URL(request.url).searchParams.get("page") ?? "0";
+    const url = new URL(request.url);
+    const rawPage = url.searchParams.get("page") ?? "0";
     const page = /^\d{1,3}$/.test(rawPage) ? Number(rawPage) : NaN;
+    const search = (url.searchParams.get("q") ?? "").trim().slice(0, 100);
+    const deliveryOnly = url.searchParams.get("view") === "deliveries";
 
     if (!Number.isInteger(page) || page < 0 || page > 999) {
       return Response.json({ error: "Choose a valid page." }, { status: 400 });
     }
 
     const start = page * PAGE_SIZE;
-    const { data, error, count } = await supabase
-      .from("customer_requests")
-      .select("id, request_kind, service_slug, first_name, last_name, email, phone, street_address, address_line_2, city, postcode, preferred_date, preferred_time, cal_start_at, cal_time_zone, cal_booking_uid, stripe_checkout_session_id, payment_status, status, message, created_at", { count: "exact" })
-      .eq("request_kind", "booking")
-      .eq("payment_status", "paid")
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .range(start, start + PAGE_SIZE - 1);
+    const { data, error } = await supabase.rpc("search_admin_bookings", {
+      p_query: search,
+      p_delivery_only: deliveryOnly,
+      p_limit: PAGE_SIZE,
+      p_offset: start,
+    });
 
     if (error) throw error;
     const bookings = (data ?? []) as BookingRow[];
+    const total = Number(bookings[0]?.total_count ?? 0);
     const ids = bookings.map((booking) => booking.id);
     let reservations: ReservationRow[] = [];
 
@@ -81,11 +82,14 @@ export async function GET(request: Request) {
     return Response.json({
       bookings: bookings.map((booking) => ({
         ...booking,
+        total_count: undefined,
         items: byRequest.get(booking.id) ?? [],
       })),
       page,
-      total: count ?? 0,
-      has_more: start + PAGE_SIZE < (count ?? 0),
+      total,
+      has_more: start + PAGE_SIZE < total,
+      search,
+      view: deliveryOnly ? "deliveries" : "bookings",
     }, { headers: { "Cache-Control": "no-store, max-age=0" } });
   } catch (error) {
     if (error instanceof AdminAccessError) {
@@ -94,5 +98,38 @@ export async function GET(request: Request) {
 
     console.error("Admin bookings lookup failed", error);
     return Response.json({ error: "Bookings could not be loaded." }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const { supabase, user } = await requireAdmin(request);
+    const body = await request.json() as { id?: unknown };
+    const id = typeof body.id === "string" ? body.id.trim() : "";
+
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+      return Response.json({ error: "Choose a valid delivery order." }, { status: 400 });
+    }
+
+    const { data, error } = await supabase.rpc("admin_complete_delivery", {
+      p_request_id: id,
+      p_admin_user_id: user.id,
+    });
+
+    if (error) throw error;
+    if (data !== true) {
+      return Response.json({ error: "That order is no longer awaiting delivery." }, { status: 409 });
+    }
+
+    return Response.json({ delivered: true }, {
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    });
+  } catch (error) {
+    if (error instanceof AdminAccessError) {
+      return Response.json({ error: error.message }, { status: error.status });
+    }
+
+    console.error("Admin delivery update failed", error);
+    return Response.json({ error: "The delivery could not be updated." }, { status: 500 });
   }
 }

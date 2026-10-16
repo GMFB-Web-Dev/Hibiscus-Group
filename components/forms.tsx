@@ -124,7 +124,7 @@ const emptyValues: BookingValues = {
   time_zone: "Pacific/Auckland", message: "",
 };
 
-type CalSlot = { start: string; end: string };
+type BookingSlot = { start: string; end: string };
 type CartLine = { id: number; type: string; sku: string; quantity: number };
 const emptyCartLine = (id: number): CartLine => ({ id, type: "", sku: "", quantity: 1 });
 const LARGE_SKIP_SKU = "skip-rubbish-45";
@@ -153,7 +153,7 @@ export function BookingForm({
   const [step, setStep] = useState(1);
   const [values, setValues] = useState(emptyValues);
   const [consent, setConsent] = useState(false);
-  const [slots, setSlots] = useState<CalSlot[]>([]);
+  const [slots, setSlots] = useState<BookingSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [status, setStatus] = useState<FormStatus>("idle");
   const [error, setError] = useState(checkoutCancelled ? "Payment was cancelled. Your stock hold will be released automatically; choose a time to try again." : "");
@@ -197,7 +197,7 @@ export function BookingForm({
     return () => controller.abort();
   }, [fixed, step, values.time_zone]);
 
-  const slotsByDay = useMemo(() => slots.reduce<Record<string, CalSlot[]>>((groups, slot) => {
+  const slotsByDay = useMemo(() => slots.reduce<Record<string, BookingSlot[]>>((groups, slot) => {
     const day = new Intl.DateTimeFormat("en-NZ", {
       timeZone: values.time_zone,
       weekday: "long",
