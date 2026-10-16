@@ -518,6 +518,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .admin-booking-search button, .admin-delivered-button { min-height: 44px; padding: 9px 15px; border: 1px solid var(--pink); border-radius: 7px; background: var(--pink); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
 .admin-booking-search button[type="button"] { background: #fff; color: var(--pink); }
 .admin-booking-search button:disabled, .admin-delivered-button:disabled { opacity: .55; cursor: not-allowed; }
+.admin-search-status { min-height: 18px; color: #667085; font-size: 12px; }
 .admin-booking-list { display: grid; gap: 14px; }
 .admin-booking-card { padding: 21px; border: 1px solid #d8d9dc; border-radius: 10px; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .035); }
 .admin-booking-main { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }

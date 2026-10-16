@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
@@ -97,6 +98,7 @@ export default function AdminDashboard() {
   const [bookingSearch, setBookingSearch] = useState("");
   const [activeBookingSearch, setActiveBookingSearch] = useState("");
   const [deliveringId, setDeliveringId] = useState("");
+  const bookingsRequestId = useRef(0);
 
   const loadBookings = useCallback(async (
     activeSession: Session,
@@ -104,6 +106,7 @@ export default function AdminDashboard() {
     tab: "bookings" | "deliveries",
     search = "",
   ) => {
+    const requestId = ++bookingsRequestId.current;
     setBookingsLoading(true);
     setBookingsError("");
 
@@ -116,14 +119,17 @@ export default function AdminDashboard() {
         cache: "no-store",
       });
       const body = await readJson(response);
+      if (requestId !== bookingsRequestId.current) return;
       setBookings((body.bookings ?? []) as AdminBooking[]);
       setBookingsPage(page);
       setBookingsTotal(body.total as number);
       setBookingsHasMore(body.has_more as boolean);
+      if (tab === "bookings") setActiveBookingSearch(search);
     } catch (error) {
+      if (requestId !== bookingsRequestId.current) return;
       setBookingsError(error instanceof Error ? error.message : "Bookings could not be loaded.");
     } finally {
-      setBookingsLoading(false);
+      if (requestId === bookingsRequestId.current) setBookingsLoading(false);
     }
   }, []);
 
@@ -182,6 +188,18 @@ export default function AdminDashboard() {
       mounted = false;
     };
   }, [loadInventory, supabase]);
+
+  useEffect(() => {
+    if (activeTab !== "bookings" || !session) return;
+    const search = bookingSearch.trim();
+    if (search === activeBookingSearch) return;
+
+    const timer = window.setTimeout(() => {
+      void loadBookings(session, 0, "bookings", search);
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [activeBookingSearch, activeTab, bookingSearch, loadBookings, session]);
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -254,14 +272,6 @@ export default function AdminDashboard() {
     }
   }
 
-  function searchBookings(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!session) return;
-    const search = bookingSearch.trim();
-    setActiveBookingSearch(search);
-    void loadBookings(session, 0, "bookings", search);
-  }
-
   async function markDelivered(booking: AdminBooking) {
     if (!session) return;
     setDeliveringId(booking.id);
@@ -294,6 +304,25 @@ export default function AdminDashboard() {
     }
     return [...result.entries()];
   }, [items]);
+
+  const visiblePaidBookings = useMemo(() => {
+    const query = bookingSearch.trim().toLocaleLowerCase();
+    if (!query || query === activeBookingSearch.toLocaleLowerCase()) return bookings;
+
+    return bookings.filter((booking) => [
+      booking.id,
+      booking.first_name,
+      booking.last_name,
+      booking.email,
+      booking.phone,
+      booking.street_address,
+      booking.address_line_2,
+      booking.city,
+      booking.postcode,
+      booking.service_slug,
+    ].filter(Boolean).join(" ").toLocaleLowerCase().includes(query));
+  }, [activeBookingSearch, bookingSearch, bookings]);
+  const bookingSearchPending = bookingSearch.trim() !== activeBookingSearch;
 
   if (view === "checking" || view === "loading") {
     return <main className="admin-loading">Loading secure dashboard…</main>;
@@ -491,7 +520,7 @@ export default function AdminDashboard() {
             <p>Only paid bookings appear here. Pending, cancelled and failed payments are excluded.</p>
           </div>
 
-          <form className="admin-booking-search" role="search" onSubmit={searchBookings}>
+          <div className="admin-booking-search" role="search">
             <label htmlFor="admin-booking-search">Search paid bookings</label>
             <div>
               <input
@@ -502,22 +531,21 @@ export default function AdminDashboard() {
                 placeholder="Name, email, phone, address or reference"
                 maxLength={100}
               />
-              <button type="submit" disabled={bookingsLoading}>Search</button>
-              {activeBookingSearch ? <button type="button" onClick={() => {
-                if (!session) return;
-                setBookingSearch("");
-                setActiveBookingSearch("");
-                void loadBookings(session, 0, "bookings");
-              }}>Clear</button> : null}
+              {bookingSearch ? <button type="button" onClick={() => setBookingSearch("")}>Clear</button> : null}
             </div>
-          </form>
+            <span className="admin-search-status" role="status" aria-live="polite">
+              {bookingsLoading || bookingSearchPending ? "Filtering…" : activeBookingSearch ? `${bookingsTotal} matching bookings` : "Type to filter automatically"}
+            </span>
+          </div>
 
           {bookingsError ? <p className="admin-alert error" role="alert">{bookingsError}</p> : null}
           {bookingsLoading ? <p>Loading bookings…</p> : null}
-          {!bookingsLoading && !bookings.length ? <p>No paid bookings on this page yet.</p> : null}
+          {!bookingsLoading && !visiblePaidBookings.length
+            ? <p>{bookingSearch ? "No paid bookings match that search." : "No paid bookings yet."}</p>
+            : null}
 
           <div className="admin-booking-list">
-            {bookings.map((booking) => {
+            {visiblePaidBookings.map((booking) => {
               const service = serviceNames[booking.service_slug] ?? booking.service_slug;
               const bookedTime = booking.cal_start_at
                 ? new Intl.DateTimeFormat("en-NZ", {
