@@ -135,9 +135,9 @@ export const services: Record<ServiceSlug, Service> = {
     eyebrow: "PRACTICAL TREE & OUTDOOR CARE",
     accent: "#2d8a32",
     hero: "/images/figma/arb-1.png",
-    introImage: "/images/figma/arb-3.png",
+    introImage: "/images/figma/arb-3.jpg",
     detailImage: "/images/figma/arb-4.png",
-    finalImage: "/images/figma/arb-8.png",
+    finalImage: "/images/figma/arb-8.jpg",
     heroTitle: "ARB 2 U - ARBORIST SERVICES",
     heroCopy: "Tree and arb services for properties needing practical outdoor support.",
     introCopy: [

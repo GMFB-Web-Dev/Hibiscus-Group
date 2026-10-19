@@ -50,7 +50,22 @@ export function Logo({ indicateHome = false }: { indicateHome?: boolean }) {
       aria-current={active ? "page" : undefined}
     >
       <span className="visually-hidden">Hibiscus Group home</span>
-      <span aria-hidden>LOGO</span>
+      <Image
+        className="site-logo-image site-logo-full"
+        src="/images/brand/hibiscus-group-white-logo.png"
+        alt=""
+        width={2000}
+        height={667}
+        aria-hidden
+      />
+      <Image
+        className="site-logo-badge"
+        src="/images/brand/hibiscus-badge-white.png"
+        alt=""
+        width={512}
+        height={512}
+        aria-hidden
+      />
     </Link>
   );
 }
