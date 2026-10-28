@@ -114,6 +114,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .home-about .split-copy { padding-left: 0; }
 .home-about .heading-line { margin-bottom: 20px; }
 .home-about .split-image { min-height: 640px; }
+.home-about .split-image img {
+  object-position: center 0%;
+}
 
 .values-section { min-height: 590px; padding: 56px 64px; display: grid; grid-template-columns: 42% 58%; background: #f2f2f2; }
 .values-section > .section-heading { align-self: center; max-width: 520px; }
