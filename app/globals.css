@@ -204,6 +204,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .about-intro { min-height: 706px; padding: 33px 64px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 80px; }
 .about-intro .split-copy p { font-size: 18px; line-height: 1.5; }
 .about-values { grid-template-columns: 45% 55%; }
+.about-intro .split-image img {
+  object-position: center 0%;
+}
 .team-section { min-height: 550px; }
 .mission-section { min-height: 280px; padding: 36px 64px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 60px; background: #000; color: #fff; }
 .mission-section h2 { font-family: var(--font-inter), sans-serif; font-size: 46px; font-weight: 600; line-height: 1.2; }
