@@ -1,6 +1,10 @@
 import Image from "next/image";
+import Link from "next/link";
+import { connection } from "next/server";
 import type { Service } from "@/lib/site-data";
+import { createPublicSupabaseClient } from "@/lib/supabase";
 import { AreasSection, ArrowButton, CheckIcon, Hero, SectionHeading, SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { WaterPriceTable, type WaterPriceArea } from "@/components/water-price-table";
 
 const skipRows = [
   ["RUBBISH", "2m³ Cubic Mini Skip", "450kg weight limit", "$235"],
@@ -10,17 +14,54 @@ const skipRows = [
   ["", "3m³ Standard Mini Skip", "Clean fill only", "$285"],
 ];
 
-const waterRows = [
-  ["Albany", "$240", "$240", "$340", "$440"],
-  ["Kaukapakapa", "$290", "$290", "$390", "$460"],
-  ["Makarau", "$350", "$350", "$430", "$550"],
-  ["Gulf Harbour", "$350", "$350", "$490", "$590"],
-  ["Puhoi", "$290", "$290", "$360", "$480"],
-  ["Whangaparaoa", "$200", "$210", "$260", "$360"],
-  ["Waiwera", "$260", "$260", "$360", "$460"],
-  ["Stanmore Bay", "$260", "$260", "$360", "$460"],
-  ["Dairy Flat", "$260", "$260", "$360", "$460"],
-];
+async function loadWaterPrices() {
+  const { data, error } = await createPublicSupabaseClient()
+    .from("inventory_items")
+    .select("name, price_cents")
+    .eq("service_slug", "h2o-2-u")
+    .eq("active", true);
+
+  if (error) throw error;
+
+  const areas = new Map<string, WaterPriceArea>();
+  const volumes = new Set<number>();
+  for (const item of data) {
+    // Water inventory names use the same "5,000 litres to Albany" format as booking.
+    const match = /^([\d,]+) litres to (.+)$/.exec(item.name);
+    if (!match) continue;
+
+    const litres = Number(match[1].replaceAll(",", ""));
+    const name = match[2];
+    const area = areas.get(name) ?? { name, prices: {} };
+    area.prices[litres] = item.price_cents;
+    areas.set(name, area);
+    volumes.add(litres);
+  }
+
+  return {
+    areas: [...areas.values()].sort((a, b) => a.name.localeCompare(b.name, "en-NZ")),
+    volumes: [...volumes].sort((a, b) => a - b),
+  };
+}
+
+async function WaterPricing({ service }: { service: Service }) {
+  await connection();
+  const prices = await loadWaterPrices().catch((error: unknown) => {
+    console.error("Unable to load water pricing", error);
+    return null;
+  });
+
+  return (
+    <section className="pricing-section" style={{ "--accent": service.accent } as React.CSSProperties}>
+      <SectionHeading eyebrow="PICK YOUR AMOUNT, CHOOSE YOUR DATE AND WE'LL BRING THE WATER TO YOU." centered>H2O 2 U PRICING</SectionHeading>
+      {prices?.areas.length ? (
+        <WaterPriceTable areas={prices.areas} volumes={prices.volumes} />
+      ) : (
+        <p className="water-price-note">Please <Link href="/contact">contact us for water delivery pricing</Link>.</p>
+      )}
+    </section>
+  );
+}
 
 function Pricing({ service }: { service: Service }) {
   if (service.slug === "skip-2-u") {
@@ -36,14 +77,7 @@ function Pricing({ service }: { service: Service }) {
     </section>;
   }
   if (service.slug === "h2o-2-u") {
-    return <section className="pricing-section" style={{ "--accent": service.accent } as React.CSSProperties}>
-      <SectionHeading eyebrow="PICK YOUR AMOUNT, CHOOSE YOUR DATE AND WE'LL BRING THE WATER TO YOU." centered>H2O 2 U PRICING</SectionHeading>
-      <div className="price-table water-table">
-        <h3>WATER DELIVERY</h3>
-        <div className="table-head"><span>AREA</span><span>6,000 LITRES</span><span>10,000 LITRES</span><span>15,000 LITRES</span><span>20,000 LITRES</span></div>
-        {waterRows.map((row) => <div className="table-row" key={row[0]}>{row.map((cell, index) => <span key={`${row[0]}-${index}`}>{cell}</span>)}</div>)}
-      </div>
-    </section>;
+    return <WaterPricing service={service} />;
   }
   return null;
 }

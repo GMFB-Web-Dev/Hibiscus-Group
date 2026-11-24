@@ -197,9 +197,20 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .table-head, .table-row { min-height: 58px; padding: 0 14px; display: grid; align-items: center; border-bottom: 1px solid var(--accent); }
 .skip-table .table-head, .skip-table .table-row { grid-template-columns: 2fr 1.3fr .5fr; }
 .table-head { background: #f2f2f2; color: var(--accent); font-weight: 700; }
-.price-table > div:last-child .table-row, .water-table .table-row:last-child { border-bottom: 0; }
-.water-table .table-head, .water-table .table-row { grid-template-columns: 1.1fr repeat(4, 1fr); }
-.water-table .table-row:nth-child(6), .water-table .table-row:nth-child(10), .water-table .table-row:nth-child(11) { background: var(--pink); }
+.skip-table > div:last-child .table-row { border-bottom: 0; }
+.water-price-search, .water-price-note { max-width: 1312px; margin: 20px auto 0; }
+.water-price-search { display: grid; gap: 8px; font-weight: 600; }
+.water-price-search input { width: min(100%, 320px); padding: 10px 14px; border: 1px solid #b8c1cc; border-radius: 8px; font-size: 16px; font-weight: 400; }
+.water-price-search input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.water-price-note a { text-decoration: underline; }
+.water-table { margin-top: 16px; overflow-x: auto; }
+.water-table table { width: 100%; border-collapse: collapse; }
+.water-table thead { background: #f2f2f2; }
+.water-table th, .water-table td { padding: 16px 14px; text-align: right; border-bottom: 1px solid #e2e8f0; }
+.water-table th:first-child { text-align: left; }
+.water-table tbody th { font-weight: 500; }
+.water-table tbody tr:nth-child(even) { background: #f8fafc; }
+.water-table tbody tr:last-child > * { border-bottom: 0; }
 
 .about-intro { min-height: 706px; padding: 33px 64px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 80px; }
 .about-intro .split-copy p { font-size: 18px; line-height: 1.5; }
@@ -410,7 +421,10 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .contact-card-grid h3 { font-size: 28px; }
   .contact-page .contact-form-section { min-height: 0; padding: 40px 20px 56px; }
   .pricing-section { overflow-x: auto; }
-  .price-table { min-width: 760px; }
+  .skip-table { min-width: 760px; }
+  .water-table th, .water-table td { padding: 12px 6px; font-size: 14px; }
+  .water-table th:first-child { padding-left: 10px; overflow-wrap: anywhere; }
+  .water-table th:last-child, .water-table td:last-child { padding-right: 10px; }
   .booking-shell h1 { font-size: 36px; }
   .booking-fields.two-col, .booking-fields .two-col, .booking-review { grid-template-columns: 1fr; }
   .booking-fields .full { grid-column: auto; }

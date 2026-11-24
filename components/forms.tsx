@@ -162,6 +162,7 @@ export function BookingForm({
   const accent = service?.accent || "#e91e63";
   const items = inventory.filter((item) => item.service_slug === serviceSlug);
   const types = [...new Set(items.map(inventoryType))];
+  if (serviceSlug === "h2o-2-u") types.sort((a, b) => a.localeCompare(b, "en-NZ"));
   const selectedItems = cart.map((line) => ({
     ...line,
     item: items.find((item) => item.sku === line.sku),
